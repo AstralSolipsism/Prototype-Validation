@@ -60,13 +60,13 @@ jobs:
           }
 
       - name: Build P2 visual prototype
-        run: cargo build --locked --release -p mobile_region_visual
+        run: cargo build --locked -p mobile_region_visual
 
       - name: Assemble validation package
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item target/release/mobile_region_visual.exe dist/mobile_region_visual.exe
+          Copy-Item target/debug/mobile_region_visual.exe dist/mobile_region_visual.exe
           Copy-Item docs/visual-acceptance/p2-checklist.md dist/p2-checklist.md
           Copy-Item scripts/collect_p2_machine_info.ps1 dist/collect_p2_machine_info.ps1
           @"
@@ -85,7 +85,8 @@ jobs:
           - P：开启或关闭客户端表现摇摆
           - R：重置航行时间
 
-          本程序只验证 P2 移动参考系和统一内外空间，不代表正式游戏画面或船舶物理。
+          该程序使用工作区的优化开发配置构建，以缩短技术预生产反馈周期。
+          本程序只验证 P2 移动参考系和统一内外空间，不代表正式游戏画面、最终性能或船舶物理。
           "@ | Set-Content -Encoding UTF8 dist/RUN.md
 
       - name: Upload validated Windows package

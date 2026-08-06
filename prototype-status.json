@@ -6,37 +6,45 @@
     {
       "id": "P0",
       "name": "foundation-contracts",
-      "status": "code-ready-for-rust-ci",
+      "status": "automatic-gates-passed-lockfile-commit-pending",
       "passed": false,
       "evidence_present": [
         "static architecture boundary validator",
         "cross-language deterministic test vectors",
-        "Rust unit tests authored"
+        "Rust 1.97.1 workspace compilation",
+        "Bevy 0.19 application compilation",
+        "cargo fmt and clippy success",
+        "engine-independent Rust tests success",
+        "forward and reverse headless camera trace success"
       ],
       "evidence_missing": [
-        "Rust 1.97.1 workspace compilation",
-        "clippy and cargo test results from GitHub Actions",
-        "Cargo.lock committed after dependency resolution"
+        "Cargo.lock committed and CI repeated with --locked from repository state"
       ]
     },
     {
       "id": "P1",
       "name": "complex-scroll-camera",
-      "status": "code-ready-for-ci-and-gpu-review",
-      "passed": false,
+      "status": "passed-with-non-blocking-engineering-followups",
+      "passed": true,
       "evidence_present": [
         "engine-independent camera core",
-        "forward and reverse headless trajectory report generator",
-        "Bevy 0.19 hand-built route scene"
+        "forward and reverse headless trajectory reports",
+        "Bevy 0.19 hand-built route scene",
+        "manual GPU validation of straight route, junction visibility, ninety-degree turn, post-turn side view, bidirectional travel, slope stability, unified world space, clipping, flicker and motion comfort",
+        "manual result recorded in docs/evidence/p1-manual-gpu-validation-2026-08-06.md"
       ],
-      "evidence_missing": [
-        "Bevy application compilation",
-        "headless threshold report",
-        "manual GPU visual checklist",
-        "screenshot regression baseline"
+      "known_non_blocking_issues": [
+        "Issue #5 screen-relative input mapping",
+        "Issue #6 camera-to-subject occlusion fade and cutaway",
+        "Issue #7 archived video and screenshot regression evidence"
       ]
     },
-    {"id":"P2","status":"not-started","passed":false},
+    {
+      "id": "P2",
+      "name": "mobile-reference-frame-and-unified-interior-exterior",
+      "status": "unblocked-ready-to-start",
+      "passed": false
+    },
     {"id":"P3","status":"not-started","passed":false},
     {"id":"P4","status":"not-started","passed":false},
     {"id":"P5","status":"not-started","passed":false},

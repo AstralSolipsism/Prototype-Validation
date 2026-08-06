@@ -9,26 +9,37 @@ on:
       - "**/Cargo.toml"
       - rust-toolchain.toml
       - .github/workflows/lockfile.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - Cargo.toml
+      - "**/Cargo.toml"
+      - rust-toolchain.toml
+      - .github/workflows/lockfile.yml
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: dependency-lockfile-${{ github.ref }}
+  group: dependency-lockfile-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   generate:
     name: generate and commit Cargo.lock
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      TARGET_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
 
     steps:
-      - name: Checkout branch
+      - name: Checkout source branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ env.TARGET_BRANCH }}
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -49,4 +60,4 @@ jobs:
             exit 0
           fi
           git commit -m "Lock Rust dependencies"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "HEAD:${TARGET_BRANCH}"

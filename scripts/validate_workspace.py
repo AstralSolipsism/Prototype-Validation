@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import json
+import tomllib
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def main() -> int:
+    workspace = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
+    assert workspace["workspace"]["resolver"] == "3"
+    assert workspace["workspace"]["package"]["edition"] == "2024"
+    assert workspace["workspace"]["package"]["rust-version"] == "1.97"
+
+    bevy = workspace["workspace"]["dependencies"]["bevy"]
+    assert bevy["version"] == "=0.19.0"
+    assert bevy["default-features"] is False
+    assert bevy["features"] == ["3d"]
+
+    members = set(workspace["workspace"]["members"])
+    required = {
+        "crates/world_ids",
+        "crates/world_time",
+        "crates/deterministic_rng",
+        "crates/world_math",
+        "crates/protocol",
+        "crates/replay_core",
+        "crates/scroll_camera_core",
+        "crates/p1_scenario",
+        "apps/camera_trace",
+        "apps/camera_routes",
+    }
+    assert required <= members, required - members
+
+    status = json.loads((ROOT / "prototype-status.json").read_text(encoding="utf-8"))
+    stages = {entry["id"]: entry for entry in status["stages"]}
+    assert stages["P0"]["passed"] is False
+    assert stages["P1"]["passed"] is False
+    assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(2, 9))
+
+    print("Workspace manifest and prototype status passed.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

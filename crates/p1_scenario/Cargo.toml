@@ -1,0 +1,10 @@
+[package]
+name = "p1_scenario"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+glam.workspace = true
+scroll_camera_core = { path = "../scroll_camera_core" }

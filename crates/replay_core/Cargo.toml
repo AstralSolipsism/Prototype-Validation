@@ -1,0 +1,15 @@
+[package]
+name = "replay_core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+world_ids = { path = "../world_ids" }
+world_time = { path = "../world_time" }
+
+[dev-dependencies]
+serde_json.workspace = true

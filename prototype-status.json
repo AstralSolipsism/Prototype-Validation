@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-08-06",
+  "repository_role": "technical-preproduction",
+  "stages": [
+    {
+      "id": "P0",
+      "name": "foundation-contracts",
+      "status": "code-ready-for-rust-ci",
+      "passed": false,
+      "evidence_present": [
+        "static architecture boundary validator",
+        "cross-language deterministic test vectors",
+        "Rust unit tests authored"
+      ],
+      "evidence_missing": [
+        "Rust 1.97.1 workspace compilation",
+        "clippy and cargo test results from GitHub Actions",
+        "Cargo.lock committed after dependency resolution"
+      ]
+    },
+    {
+      "id": "P1",
+      "name": "complex-scroll-camera",
+      "status": "code-ready-for-ci-and-gpu-review",
+      "passed": false,
+      "evidence_present": [
+        "engine-independent camera core",
+        "forward and reverse headless trajectory report generator",
+        "Bevy 0.19 hand-built route scene"
+      ],
+      "evidence_missing": [
+        "Bevy application compilation",
+        "headless threshold report",
+        "manual GPU visual checklist",
+        "screenshot regression baseline"
+      ]
+    },
+    {"id":"P2","status":"not-started","passed":false},
+    {"id":"P3","status":"not-started","passed":false},
+    {"id":"P4","status":"not-started","passed":false},
+    {"id":"P5","status":"not-started","passed":false},
+    {"id":"P6","status":"not-started","passed":false},
+    {"id":"P7","status":"not-started","passed":false},
+    {"id":"P8","status":"not-started","passed":false}
+  ]
+}

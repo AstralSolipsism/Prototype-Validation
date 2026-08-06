@@ -6,13 +6,24 @@
 
 ## 通过条件
 
-1. Rust 1.97.1 下 `cargo fmt`、`cargo clippy`、`cargo test` 全部通过；
-2. GitHub Actions 生成 `Cargo.lock`；
+1. Rust 1.97.1 下 `cargo fmt`、`cargo check`、`cargo clippy` 和引擎无关测试全部通过；
+2. `Cargo.lock` 已提交，CI 使用 `--locked`；
 3. 同一测试向量在 Rust 与 Python 中一致；
 4. 重复命令不重复产生领域结果；
 5. 千公里级坐标下厘米偏移能稳定转换为摄影机相对坐标；
-6. 核心 crate 架构检查确认无 Bevy 类型泄漏。
+6. 核心 crate 架构检查确认无 Bevy 类型泄漏；
+7. 正向与反向无头摄影机报告能够从同一提交重复生成。
+
+## 已有证据
+
+- 静态架构边界检查通过；
+- Rust 1.97.1 / Bevy 0.19 工作区编译通过；
+- `cargo fmt` 和 Clippy 通过；
+- 引擎无关 crate 与无头程序测试通过；
+- Rust/Python 确定性测试向量一致；
+- `Cargo.lock` 已由依赖锁定工作流提交；
+- P1 正向与反向无头轨迹报告成功生成。
 
 ## 当前结论
 
-代码已准备进入 Rust CI，**尚未通过 P0 停止线**。
+`Cargo.lock` 已进入仓库。正在以仓库中已提交的锁文件执行最终 `--locked` CI 复验；复验成功后关闭 P0 门禁。

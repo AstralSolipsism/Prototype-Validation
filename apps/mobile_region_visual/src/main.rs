@@ -330,7 +330,7 @@ fn update_render_space(
     mut camera: Query<&mut Transform, (With<PrototypeCamera>, Without<SpatialVisual>)>,
 ) {
     let (camera_local_position, camera_local_target) = match state.camera_mode {
-        CameraMode::CabinWindow => (DVec3::new(0.0, 4.7, 13.0), DVec3::new(0.0, 3.2, -12.0)),
+        CameraMode::CabinWindow => (DVec3::new(0.0, 4.7, 2.5), DVec3::new(0.0, 3.2, -12.0)),
         CameraMode::ExteriorCutaway => {
             (DVec3::new(-15.0, 10.0, 22.0), DVec3::new(0.0, 2.5, 0.0))
         }

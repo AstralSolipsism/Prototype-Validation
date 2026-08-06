@@ -55,17 +55,26 @@ jobs:
       - name: Resolve dependency lockfile
         run: cargo generate-lockfile
 
-      - name: Check workspace including Bevy application
+      - name: Check workspace including Bevy applications
         run: cargo check --workspace --all-targets --locked
 
-      - name: Clippy workspace including Bevy application
+      - name: Clippy workspace including Bevy applications
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
       - name: Test engine-independent crates and headless applications
-        run: cargo test --workspace --exclude camera_routes --all-targets --locked
+        run: >-
+          cargo test --workspace
+          --exclude camera_routes
+          --exclude mobile_region_visual
+          --all-targets --locked
 
       - name: Generate P1 headless camera trace
         run: cargo run --locked -p camera_trace -- artifacts/p1-camera-trace.json
+
+      - name: Generate P2 headless reference-frame trace
+        run: >-
+          cargo run --locked -p p2_reference_frame_trace --
+          artifacts/p2-reference-frame-trace.json
 
       - name: Upload dependency lockfile
         if: always()
@@ -75,10 +84,12 @@ jobs:
           path: Cargo.lock
           if-no-files-found: warn
 
-      - name: Upload P1 evidence
+      - name: Upload headless evidence
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: p1-headless-evidence
-          path: artifacts/p1-camera-trace.json
+          name: headless-prototype-evidence
+          path: |
+            artifacts/p1-camera-trace.json
+            artifacts/p2-reference-frame-trace.json
           if-no-files-found: error

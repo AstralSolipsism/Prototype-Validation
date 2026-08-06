@@ -98,10 +98,9 @@ pub fn require_version(
     actual: EntityVersion,
 ) -> Result<(), VersionCheckError> {
     match expected {
-        Some(expected) if expected != actual => Err(VersionCheckError::Conflict {
-            expected,
-            actual,
-        }),
+        Some(expected) if expected != actual => {
+            Err(VersionCheckError::Conflict { expected, actual })
+        }
         _ => Ok(()),
     }
 }

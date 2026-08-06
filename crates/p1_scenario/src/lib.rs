@@ -42,11 +42,7 @@ pub fn route_points() -> Vec<DVec3> {
     ]
 }
 
-pub fn grammar_at(
-    distance: f64,
-    total_length: f64,
-    direction: TravelDirection,
-) -> ScrollGrammar {
+pub fn grammar_at(distance: f64, total_length: f64, direction: TravelDirection) -> ScrollGrammar {
     let spatial_progress = (distance / total_length).clamp(0.0, 1.0);
     let directed_progress = match direction {
         TravelDirection::Forward => spatial_progress,

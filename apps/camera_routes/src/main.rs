@@ -225,15 +225,14 @@ fn control_route(
         route_state.auto_run = true;
     }
 
-    let manual_direction = if keyboard.pressed(KeyCode::ArrowLeft)
-        || keyboard.pressed(KeyCode::KeyA)
-    {
-        Some(TravelDirection::Reverse)
-    } else if keyboard.pressed(KeyCode::ArrowRight) || keyboard.pressed(KeyCode::KeyD) {
-        Some(TravelDirection::Forward)
-    } else {
-        None
-    };
+    let manual_direction =
+        if keyboard.pressed(KeyCode::ArrowLeft) || keyboard.pressed(KeyCode::KeyA) {
+            Some(TravelDirection::Reverse)
+        } else if keyboard.pressed(KeyCode::ArrowRight) || keyboard.pressed(KeyCode::KeyD) {
+            Some(TravelDirection::Forward)
+        } else {
+            None
+        };
 
     if let Some(direction) = manual_direction {
         route_state.direction = direction;
@@ -242,7 +241,7 @@ fn control_route(
     if route_state.auto_run || manual_direction.is_some() {
         route_state.distance = (route_state.distance
             + ROUTE_SPEED_MPS * route_state.direction.sign() * time.delta_secs_f64())
-            .clamp(0.0, route_state.route.total_length());
+        .clamp(0.0, route_state.route.total_length());
 
         let reached_end = route_state.direction == TravelDirection::Forward
             && route_state.distance >= route_state.route.total_length();

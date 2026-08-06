@@ -80,7 +80,10 @@ impl FixedStepClock {
     }
 
     pub fn advance(&mut self) -> Result<WorldInstant, ClockError> {
-        self.now = self.now.checked_add(self.step).ok_or(ClockError::Overflow)?;
+        self.now = self
+            .now
+            .checked_add(self.step)
+            .ok_or(ClockError::Overflow)?;
         Ok(self.now)
     }
 
@@ -111,13 +114,14 @@ mod tests {
 
     #[test]
     fn fixed_step_advances_discrete_world_time() {
-        let mut clock = FixedStepClock::new(
-            WorldInstant::from_ticks(100),
-            WorldDuration::from_ticks(5),
-        )
-        .expect("valid clock");
+        let mut clock =
+            FixedStepClock::new(WorldInstant::from_ticks(100), WorldDuration::from_ticks(5))
+                .expect("valid clock");
 
-        assert_eq!(clock.advance().expect("advance"), WorldInstant::from_ticks(105));
+        assert_eq!(
+            clock.advance().expect("advance"),
+            WorldInstant::from_ticks(105)
+        );
         assert_eq!(
             clock.advance_by(3).expect("advance by"),
             WorldInstant::from_ticks(120)

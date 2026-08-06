@@ -25,12 +25,12 @@ impl SeedMaterial {
             (self.feature_key >> 64) as u64,
         ];
 
-        parts.into_iter().enumerate().fold(
-            0x6a09_e667_f3bc_c909,
-            |state, (index, part)| {
+        parts
+            .into_iter()
+            .enumerate()
+            .fold(0x6a09_e667_f3bc_c909, |state, (index, part)| {
                 mix64(state ^ mix64(part.wrapping_add(GOLDEN_GAMMA.wrapping_mul(index as u64 + 1))))
-            },
-        )
+            })
     }
 }
 
@@ -81,8 +81,7 @@ impl DeterministicRng {
     }
 
     pub fn fork(&self, stream_key: u128) -> Self {
-        let seed =
-            mix64(self.state ^ stream_key as u64 ^ mix64((stream_key >> 64) as u64));
+        let seed = mix64(self.state ^ stream_key as u64 ^ mix64((stream_key >> 64) as u64));
         Self::from_seed(seed)
     }
 }

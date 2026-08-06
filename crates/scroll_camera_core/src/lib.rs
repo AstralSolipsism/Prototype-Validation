@@ -142,8 +142,7 @@ impl CameraRigState {
         }
 
         let desired_heading = normalize_horizontal(route_tangent, self.smoothed_heading)?;
-        let heading_blend =
-            smoothing_factor(self.config.heading_half_life_seconds, delta_seconds);
+        let heading_blend = smoothing_factor(self.config.heading_half_life_seconds, delta_seconds);
         self.smoothed_heading =
             rotate_horizontal_toward(self.smoothed_heading, desired_heading, heading_blend)?;
 
@@ -322,8 +321,7 @@ impl PolylineRoute {
             .min(self.segment_lengths.len() - 1);
         let segment_start = self.cumulative_lengths[segment_index];
         let distance_on_segment = clamped - segment_start;
-        let fraction =
-            (distance_on_segment / self.segment_lengths[segment_index]).clamp(0.0, 1.0);
+        let fraction = (distance_on_segment / self.segment_lengths[segment_index]).clamp(0.0, 1.0);
         let start = self.points[segment_index];
         let end = self.points[segment_index + 1];
         let delta = end - start;
@@ -380,8 +378,7 @@ mod tests {
     #[test]
     fn grammar_change_is_smoothed_instead_of_teleporting_camera() {
         let mut rig =
-            CameraRigState::new(CameraRigConfig::default(), DVec3::X, ViewSide::Left)
-                .expect("rig");
+            CameraRigState::new(CameraRigConfig::default(), DVec3::X, ViewSide::Left).expect("rig");
         let before = rig
             .update(
                 DVec3::ZERO,
@@ -404,8 +401,7 @@ mod tests {
     #[test]
     fn opposite_heading_rotates_without_degenerate_lerp() {
         let mut rig =
-            CameraRigState::new(CameraRigConfig::default(), DVec3::X, ViewSide::Left)
-                .expect("rig");
+            CameraRigState::new(CameraRigConfig::default(), DVec3::X, ViewSide::Left).expect("rig");
         for _ in 0..180 {
             let pose = rig
                 .update(
@@ -422,8 +418,7 @@ mod tests {
     #[test]
     fn explicit_view_side_is_preserved_during_turn() {
         let mut rig =
-            CameraRigState::new(CameraRigConfig::default(), DVec3::X, ViewSide::Left)
-                .expect("rig");
+            CameraRigState::new(CameraRigConfig::default(), DVec3::X, ViewSide::Left).expect("rig");
         for _ in 0..180 {
             rig.update(
                 DVec3::ZERO,

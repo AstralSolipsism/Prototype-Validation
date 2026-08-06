@@ -183,14 +183,14 @@ mod tests {
 
     #[test]
     fn rigid_transform_round_trip_is_stable() {
-        let transform = RigidTransform::new(
-            DVec3::new(10.0, 2.0, -4.0),
-            DQuat::from_rotation_y(0.7),
-        )
-        .expect("valid transform");
+        let transform =
+            RigidTransform::new(DVec3::new(10.0, 2.0, -4.0), DQuat::from_rotation_y(0.7))
+                .expect("valid transform");
         let point = DVec3::new(3.0, 5.0, 7.0);
         assert_near(
-            transform.inverse().transform_point(transform.transform_point(point)),
+            transform
+                .inverse()
+                .transform_point(transform.transform_point(point)),
             point,
             1.0e-10,
         );

@@ -32,11 +32,7 @@ impl RigidTransform {
         })
     }
 
-    pub fn look_at(
-        translation: DVec3,
-        target: DVec3,
-        up: DVec3,
-    ) -> Result<Self, TransformError> {
+    pub fn look_at(translation: DVec3, target: DVec3, up: DVec3) -> Result<Self, TransformError> {
         if !translation.is_finite() || !target.is_finite() || !up.is_finite() {
             return Err(TransformError::NonFinite);
         }
@@ -251,8 +247,8 @@ mod tests {
 
     #[test]
     fn look_at_uses_negative_local_z_as_forward() {
-        let camera = RigidTransform::look_at(DVec3::ZERO, -DVec3::Z, DVec3::Y)
-            .expect("valid camera");
+        let camera =
+            RigidTransform::look_at(DVec3::ZERO, -DVec3::Z, DVec3::Y).expect("valid camera");
         assert_near(camera.rotation * -DVec3::Z, -DVec3::Z, 1.0e-12);
         assert_near(camera.rotation * DVec3::Y, DVec3::Y, 1.0e-12);
     }
@@ -325,16 +321,16 @@ mod tests {
             .insert_child(
                 ship,
                 world,
-                RigidTransform::new(
-                    DVec3::new(100.0, 0.0, 50.0),
-                    DQuat::from_rotation_y(0.5),
-                )
-                .expect("ship pose"),
+                RigidTransform::new(DVec3::new(100.0, 0.0, 50.0), DQuat::from_rotation_y(0.5))
+                    .expect("ship pose"),
             )
             .expect("ship frame");
 
         let ship_to_world = graph.transform_between(ship, world).expect("mapping");
-        assert_eq!(ship_to_world, graph.world_transform(ship).expect("ship world"));
+        assert_eq!(
+            ship_to_world,
+            graph.world_transform(ship).expect("ship world")
+        );
     }
 
     #[test]

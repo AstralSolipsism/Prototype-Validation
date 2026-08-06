@@ -37,8 +37,11 @@ def main() -> int:
     status = json.loads((ROOT / "prototype-status.json").read_text(encoding="utf-8"))
     stages = {entry["id"]: entry for entry in status["stages"]}
     assert stages["P0"]["passed"] is False
-    assert stages["P1"]["passed"] is False
-    assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(2, 9))
+    assert stages["P1"]["passed"] is True
+    assert stages["P1"]["status"] == "passed-with-non-blocking-engineering-followups"
+    assert stages["P2"]["passed"] is False
+    assert stages["P2"]["status"] == "unblocked-ready-to-start"
+    assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(3, 9))
 
     print("Workspace manifest and prototype status passed.")
     return 0

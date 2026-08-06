@@ -55,14 +55,14 @@ jobs:
       - name: Resolve dependency lockfile
         run: cargo generate-lockfile
 
-      - name: Check workspace
+      - name: Check workspace including Bevy application
         run: cargo check --workspace --all-targets --locked
 
-      - name: Clippy
+      - name: Clippy workspace including Bevy application
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
-      - name: Test
-        run: cargo test --workspace --all-targets --locked
+      - name: Test engine-independent crates and headless applications
+        run: cargo test --workspace --exclude camera_routes --all-targets --locked
 
       - name: Generate P1 headless camera trace
         run: cargo run --locked -p camera_trace -- artifacts/p1-camera-trace.json

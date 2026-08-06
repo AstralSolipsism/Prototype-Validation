@@ -1,0 +1,13 @@
+[package]
+name = "mobile_region_visual"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy.workspace = true
+glam.workspace = true
+mobile_region_core = { path = "../../crates/mobile_region_core" }
+world_ids = { path = "../../crates/world_ids" }
+world_math = { path = "../../crates/world_math" }

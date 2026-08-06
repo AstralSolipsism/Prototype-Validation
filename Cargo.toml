@@ -9,8 +9,11 @@ members = [
     "crates/replay_core",
     "crates/scroll_camera_core",
     "crates/p1_scenario",
+    "crates/mobile_region_core",
     "apps/camera_trace",
     "apps/camera_routes",
+    "apps/p2_reference_frame_trace",
+    "apps/mobile_region_visual",
 ]
 
 [workspace.package]

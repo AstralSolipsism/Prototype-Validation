@@ -10,8 +10,6 @@ on:
       - rust-toolchain.toml
       - .github/workflows/lockfile.yml
   pull_request:
-    branches:
-      - main
     paths:
       - Cargo.toml
       - "**/Cargo.toml"

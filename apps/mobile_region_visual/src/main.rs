@@ -240,9 +240,7 @@ fn setup(
         Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.8, -0.5, 0.0)),
     ));
 
-    info!(
-        "Controls: Space pause; C camera mode; B board/disembark; P presentation sway; R reset"
-    );
+    info!("Controls: Space pause; C camera mode; B board/disembark; P presentation sway; R reset");
 }
 
 fn update_motion(time: Res<Time>, mut state: ResMut<PrototypeState>) {
@@ -256,7 +254,7 @@ fn update_motion(time: Res<Time>, mut state: ResMut<PrototypeState>) {
             DVec3::new(0.0, (state.elapsed_seconds * 1.6).sin() * 0.22, 0.0),
             (DQuat::from_rotation_z((state.elapsed_seconds * 1.1).sin() * 0.03)
                 * DQuat::from_rotation_x((state.elapsed_seconds * 0.8).sin() * 0.018))
-                .normalize(),
+            .normalize(),
         )
         .expect("presentation sway")
     } else {
@@ -302,10 +300,18 @@ fn control_prototype(
         } else {
             state.vehicle_frame
         };
+
+        // Domain transfers use the authoritative frame graph. This visual harness
+        // uses a presentation snapshot so the rendered subject does not jump when
+        // the ship has client-only sway at the exact transfer frame.
+        let mut presentation_frames = state.frames.clone();
+        presentation_frames
+            .set_pose_in_parent(state.vehicle_frame, state.presentation_vehicle_pose)
+            .expect("presentation vehicle frame");
         let transfer = transfer_pose(
             FrameBoundPose::new(visual.frame, visual.local_pose),
             target,
-            &state.frames,
+            &presentation_frames,
         )
         .expect("frame transfer");
         visual.frame = transfer.after.frame;
@@ -367,11 +373,8 @@ fn vehicle_pose(time: f64) -> RigidTransform {
             2.5 + (time * 0.25).sin() * 0.25,
             angle.sin() * 65.0,
         );
-    RigidTransform::new(
-        position,
-        DQuat::from_rotation_y(-angle - FRAC_PI_2),
-    )
-    .expect("vehicle navigation pose")
+    RigidTransform::new(position, DQuat::from_rotation_y(-angle - FRAC_PI_2))
+        .expect("vehicle navigation pose")
 }
 
 fn spawn_box(

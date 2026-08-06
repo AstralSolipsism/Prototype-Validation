@@ -100,7 +100,7 @@ fn run_trace() -> Result<TraceReport, Box<dyn Error>> {
             DVec3::new(0.0, (time * 1.7).sin() * 0.18, 0.0),
             (DQuat::from_rotation_z((time * 1.1).sin() * 0.025)
                 * DQuat::from_rotation_x((time * 0.9).sin() * 0.015))
-                .normalize(),
+            .normalize(),
         )?;
         let vehicle_state =
             VehiclePoseState::new(authoritative).with_presentation_offset(presentation_offset);
@@ -123,9 +123,7 @@ fn run_trace() -> Result<TraceReport, Box<dyn Error>> {
         max_camera_relative_error =
             max_camera_relative_error.max(relative_f64.distance(relative_f32));
 
-        if !interior_distance.is_finite()
-            || !relative_f64.is_finite()
-            || !relative_f32.is_finite()
+        if !interior_distance.is_finite() || !relative_f64.is_finite() || !relative_f32.is_finite()
         {
             non_finite_samples += 1;
         }

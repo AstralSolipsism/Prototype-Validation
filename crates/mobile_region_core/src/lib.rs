@@ -100,10 +100,7 @@ pub struct DockingLink {
 }
 
 impl DockingLink {
-    pub fn separation_meters(
-        self,
-        frames: &ReferenceFrameGraph,
-    ) -> Result<f64, MobileRegionError> {
+    pub fn separation_meters(self, frames: &ReferenceFrameGraph) -> Result<f64, MobileRegionError> {
         let static_world = self.static_anchor.world_pose(frames)?;
         let mobile_world = self.mobile_anchor.world_pose(frames)?;
         Ok(static_world.translation.distance(mobile_world.translation))
@@ -173,8 +170,7 @@ mod tests {
         assert!(disembarked.translation_error_meters < 1.0e-9);
         assert!(disembarked.rotation_error_radians < 1.0e-9);
 
-        let boarded =
-            transfer_pose(disembarked.after, vehicle, &frames).expect("reverse transfer");
+        let boarded = transfer_pose(disembarked.after, vehicle, &frames).expect("reverse transfer");
         assert!(boarded.translation_error_meters < 1.0e-9);
         assert!(boarded.rotation_error_radians < 1.0e-9);
         assert!(
@@ -220,16 +216,11 @@ mod tests {
 
     #[test]
     fn presentation_sway_does_not_mutate_authoritative_pose() {
-        let authoritative = RigidTransform::new(
-            DVec3::new(100.0, 4.0, 200.0),
-            DQuat::from_rotation_y(1.0),
-        )
-        .expect("authority");
-        let offset = RigidTransform::new(
-            DVec3::new(0.0, 0.2, 0.0),
-            DQuat::from_rotation_z(0.03),
-        )
-        .expect("sway");
+        let authoritative =
+            RigidTransform::new(DVec3::new(100.0, 4.0, 200.0), DQuat::from_rotation_y(1.0))
+                .expect("authority");
+        let offset = RigidTransform::new(DVec3::new(0.0, 0.2, 0.0), DQuat::from_rotation_z(0.03))
+            .expect("sway");
         let state = VehiclePoseState::new(authoritative).with_presentation_offset(offset);
 
         assert_eq!(state.authoritative_in_parent, authoritative);

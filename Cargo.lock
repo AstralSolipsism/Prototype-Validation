@@ -3271,6 +3271,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "mobile_region_core"
+version = "0.1.0"
+dependencies = [
+ "glam",
+ "serde",
+ "thiserror 2.0.19",
+ "world_ids",
+ "world_math",
+]
+
+[[package]]
+name = "mobile_region_visual"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "glam",
+ "mobile_region_core",
+ "world_ids",
+ "world_math",
+]
+
+[[package]]
 name = "moxcms"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3742,6 +3764,18 @@ version = "0.1.0"
 dependencies = [
  "glam",
  "scroll_camera_core",
+]
+
+[[package]]
+name = "p2_reference_frame_trace"
+version = "0.1.0"
+dependencies = [
+ "glam",
+ "mobile_region_core",
+ "serde",
+ "serde_json",
+ "world_ids",
+ "world_math",
 ]
 
 [[package]]

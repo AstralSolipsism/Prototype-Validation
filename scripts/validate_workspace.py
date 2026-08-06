@@ -29,18 +29,22 @@ def main() -> int:
         "crates/replay_core",
         "crates/scroll_camera_core",
         "crates/p1_scenario",
+        "crates/mobile_region_core",
         "apps/camera_trace",
         "apps/camera_routes",
+        "apps/p2_reference_frame_trace",
+        "apps/mobile_region_visual",
     }
     assert required <= members, required - members
 
     status = json.loads((ROOT / "prototype-status.json").read_text(encoding="utf-8"))
     stages = {entry["id"]: entry for entry in status["stages"]}
-    assert stages["P0"]["passed"] is False
+    assert stages["P0"]["passed"] is True
+    assert stages["P0"]["status"] == "passed"
     assert stages["P1"]["passed"] is True
     assert stages["P1"]["status"] == "passed-with-non-blocking-engineering-followups"
     assert stages["P2"]["passed"] is False
-    assert stages["P2"]["status"] == "unblocked-ready-to-start"
+    assert stages["P2"]["status"] == "implementation-in-progress"
     assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(3, 9))
 
     print("Workspace manifest and prototype status passed.")

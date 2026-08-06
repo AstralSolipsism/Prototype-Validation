@@ -16,6 +16,7 @@ ENGINE_AGNOSTIC_CRATES = (
     "replay_core",
     "scroll_camera_core",
     "p1_scenario",
+    "mobile_region_core",
 )
 FORBIDDEN_TOKENS = (
     "bevy::",

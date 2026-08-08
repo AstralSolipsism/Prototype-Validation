@@ -2,13 +2,11 @@
 
 use bevy::prelude::*;
 use building_core::{
-    Aabb3, BlueprintDelta, BuildingBlueprint, BuildingCompilation, BuildingInstanceBinding,
-    CutawayDirection, ElementRef, Opening, OpeningKind, RoofKind, WallRun, apply_delta,
-    compile_blueprint,
+    Aabb3, BuildingBlueprint, BuildingCompilation, BuildingInstanceBinding, CutawayDirection,
+    ElementRef, Opening, OpeningKind, RoofKind, WallRun, apply_delta, compile_blueprint,
 };
 use p3_building_scenario::{
-    add_north_display_window_delta, moving_platform_binding, static_world_binding,
-    two_storey_shop,
+    add_north_display_window_delta, moving_platform_binding, static_world_binding, two_storey_shop,
 };
 use world_ids::WallId;
 
@@ -248,13 +246,7 @@ fn control_prototype(
     }
     if keyboard.just_pressed(KeyCode::KeyW) {
         let should_apply = !state.delta_applied;
-        rebuild_target_wall(
-            &mut commands,
-            &assets,
-            &mut state,
-            &parts,
-            should_apply,
-        );
+        rebuild_target_wall(&mut commands, &assets, &mut state, &parts, should_apply);
     }
     if keyboard.just_pressed(KeyCode::KeyR) {
         if state.delta_applied {
@@ -280,7 +272,8 @@ fn rebuild_target_wall(
     } else {
         state.baseline.clone()
     };
-    let next_compilation = compile_blueprint(&next_blueprint).expect("updated building must compile");
+    let next_compilation =
+        compile_blueprint(&next_blueprint).expect("updated building must compile");
 
     for (entity, part) in parts {
         if part.source_wall == Some(TARGET_WALL) {
@@ -729,7 +722,6 @@ fn spawn_stair_geometry(
     let step_depth = run / f64::from(steps);
 
     for index in 0..steps {
-        let progress = (f64::from(index) + 0.5) / f64::from(steps);
         let height = rise.abs() * (f64::from(index) + 1.0) / f64::from(steps);
         let z = stair.footprint.min.y + step_depth * (f64::from(index) + 0.5);
         spawn_part(
@@ -755,7 +747,6 @@ fn spawn_stair_geometry(
                 source_wall: None,
             },
         );
-        let _ = progress;
     }
 }
 
@@ -810,11 +801,7 @@ fn spawn_roof_geometry(
                             (center.y + side * half_depth * 0.5) as f32,
                         ),
                         local_rotation: Quat::from_rotation_x(angle * side as f32),
-                        local_scale: Vec3::new(
-                            width as f32,
-                            thickness as f32,
-                            slope_length as f32,
-                        ),
+                        local_scale: Vec3::new(width as f32, thickness as f32, slope_length as f32),
                         representation: Representation::Full,
                         exterior: true,
                         cutaway,
@@ -840,11 +827,7 @@ fn spawn_roof_geometry(
                             center.y as f32,
                         ),
                         local_rotation: Quat::from_rotation_z(-angle * side as f32),
-                        local_scale: Vec3::new(
-                            slope_length as f32,
-                            thickness as f32,
-                            depth as f32,
-                        ),
+                        local_scale: Vec3::new(slope_length as f32, thickness as f32, depth as f32),
                         representation: Representation::Full,
                         exterior: true,
                         cutaway,

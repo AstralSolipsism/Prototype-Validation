@@ -6,13 +6,16 @@ on:
       - agent/p4-deterministic-world-generation
     paths:
       - .github/workflows/p4-windows-visual-package.yml
+  pull_request:
+    paths:
+      - .github/workflows/p4-windows-visual-package.yml
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: p4-integrated-remote-gate
+  group: p4-integrated-remote-gate-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:

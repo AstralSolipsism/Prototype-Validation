@@ -222,11 +222,7 @@ fn build_boundary_contracts(
         .iter()
         .flat_map(|road| road.boundaries.iter().copied())
         .collect::<BTreeSet<_>>();
-    let coastline = manifest
-        .coastline
-        .iter()
-        .copied()
-        .collect::<BTreeSet<_>>();
+    let coastline = manifest.coastline.iter().copied().collect::<BTreeSet<_>>();
 
     let mut boundaries = BTreeSet::new();
     for coord in &coords {
@@ -243,25 +239,14 @@ fn build_boundary_contracts(
         .map(|boundary| {
             let direction = HexDirection::between(boundary.low, boundary.high)
                 .expect("boundary cells are adjacent");
-            let (start, end) = edge_endpoints(
-                boundary.low,
-                direction,
-                manifest.cell_radius_m,
-            );
+            let (start, end) = edge_endpoints(boundary.low, direction, manifest.cell_radius_m);
             let samples = (0..EDGE_PROFILE_SAMPLES)
                 .map(|index| {
                     let t = index as f64 / (EDGE_PROFILE_SAMPLES - 1) as f64;
                     let xz = start.lerp(end, t);
-                    let elevation = detailed_height(
-                        manifest.world_seed,
-                        manifest.cell_radius_m,
-                        xz,
-                    );
-                    let slope = detailed_slope(
-                        manifest.world_seed,
-                        manifest.cell_radius_m,
-                        xz,
-                    );
+                    let elevation =
+                        detailed_height(manifest.world_seed, manifest.cell_radius_m, xz);
+                    let slope = detailed_slope(manifest.world_seed, manifest.cell_radius_m, xz);
                     EdgeSample {
                         t,
                         world_position: DVec3::new(xz.x, elevation, xz.y),
@@ -282,8 +267,7 @@ fn build_boundary_contracts(
                         } else {
                             0.0
                         },
-                        is_coastline: coastline.contains(&boundary)
-                            || elevation.abs() <= 2.0,
+                        is_coastline: coastline.contains(&boundary) || elevation.abs() <= 2.0,
                     }
                 })
                 .collect::<Vec<_>>();
@@ -311,10 +295,7 @@ fn build_boundary_contracts(
         .collect()
 }
 
-fn summarize_cell(
-    manifest: &WorldManifest,
-    coord: HexCoord,
-) -> (ElevationSummary, LandformMix) {
+fn summarize_cell(manifest: &WorldManifest, coord: HexCoord) -> (ElevationSummary, LandformMix) {
     let center = coord.center_xz(manifest.cell_radius_m);
     let radius = manifest.cell_radius_m;
     let width = 3.0_f64.sqrt() * radius;
@@ -325,27 +306,25 @@ fn summarize_cell(
 
     let resolution = usize::from(ATLAS_INTERNAL_SAMPLE_RESOLUTION);
     for z_index in 0..resolution {
-        let z = center.y - radius
-            + 2.0 * radius * z_index as f64 / (resolution - 1) as f64;
+        let z = center.y - radius + 2.0 * radius * z_index as f64 / (resolution - 1) as f64;
         for x_index in 0..resolution {
-            let x = center.x - width * 0.5
-                + width * x_index as f64 / (resolution - 1) as f64;
+            let x = center.x - width * 0.5 + width * x_index as f64 / (resolution - 1) as f64;
             let point = DVec2::new(x, z);
             if !point_in_hex(point, center, radius) {
                 continue;
             }
             let elevation = detailed_height(manifest.world_seed, radius, point);
             let slope = detailed_slope(manifest.world_seed, radius, point);
-            let landform = classify_landform(
-                manifest.world_seed,
-                radius,
-                point,
-                elevation,
-                slope,
-            );
+            let landform = classify_landform(manifest.world_seed, radius, point, elevation, slope);
             elevations.push(elevation);
             slope_sum += slope;
-            if slope <= 0.18 && elevation > 2.0 && !matches!(landform, LandformClass::Coast | LandformClass::Estuary | LandformClass::Ocean) {
+            if slope <= 0.18
+                && elevation > 2.0
+                && !matches!(
+                    landform,
+                    LandformClass::Coast | LandformClass::Estuary | LandformClass::Ocean
+                )
+            {
                 buildable += 1;
             }
             counts[landform_bucket(landform)] += 1;
@@ -393,11 +372,7 @@ fn landform_bucket(landform: LandformClass) -> usize {
     }
 }
 
-fn resources_for(
-    biome: Biome,
-    mix: LandformMix,
-    elevation: ElevationSummary,
-) -> ResourceSummary {
+fn resources_for(biome: Biome, mix: LandformMix, elevation: ElevationSummary) -> ResourceSummary {
     let wet = (mix.valley + mix.coast + mix.water).clamp(0.0, 1.0);
     let forest = match biome {
         Biome::TemperateForest => 0.9,
@@ -455,21 +430,16 @@ pub fn detailed_height(world_seed: u128, cell_radius_m: f64, point: DVec2) -> f6
     let mountain_axis = -0.22 * point.x + 52.0 * (point.x / (scale * 1.7)).sin();
     let mountain_distance = point.y - mountain_axis;
     let west_fade = smoothstep(1.9, -0.15, east);
-    let primary_ridge = 132.0
-        * (-(mountain_distance / (scale * 0.55)).powi(2)).exp()
-        * west_fade;
+    let primary_ridge = 132.0 * (-(mountain_distance / (scale * 0.55)).powi(2)).exp() * west_fade;
 
     let secondary_axis = 0.34 * point.x - 125.0;
     let secondary_distance = point.y - secondary_axis;
-    let secondary_ridge = 48.0
-        * (-(secondary_distance / (scale * 0.42)).powi(2)).exp()
-        * smoothstep(1.3, -0.8, east);
+    let secondary_ridge =
+        48.0 * (-(secondary_distance / (scale * 0.42)).powi(2)).exp() * smoothstep(1.3, -0.8, east);
 
     let river_distance = point.y - river_center_z(point.x, scale);
     let valley = -46.0 * (-(river_distance / (scale * 0.24)).powi(2)).exp();
-    let bay = -92.0
-        * smoothstep(0.65, 2.2, east)
-        * (-(point.y / (scale * 1.08)).powi(2)).exp();
+    let bay = -92.0 * smoothstep(0.65, 2.2, east) * (-(point.y / (scale * 1.08)).powi(2)).exp();
 
     let broad_noise = value_noise(world_seed, point / (scale * 0.62), 0x51) * 15.0;
     let detail_noise = value_noise(world_seed, point / (scale * 0.19), 0x52) * 5.5;
@@ -589,11 +559,7 @@ pub fn hex_corners(coord: HexCoord, radius: f64) -> [DVec2; 6] {
     })
 }
 
-pub fn edge_endpoints(
-    coord: HexCoord,
-    direction: HexDirection,
-    radius: f64,
-) -> (DVec2, DVec2) {
+pub fn edge_endpoints(coord: HexCoord, direction: HexDirection, radius: f64) -> (DVec2, DVec2) {
     let corners = hex_corners(coord, radius);
     let (left, right) = match direction {
         HexDirection::East => (5, 0),
@@ -610,7 +576,13 @@ pub fn nearest_cell(atlas: &WorldAtlasManifest, point: DVec2) -> Option<HexCoord
     atlas
         .cells
         .iter()
-        .filter(|cell| point_in_hex(point, cell.coord.center_xz(atlas.cell_radius_m), atlas.cell_radius_m))
+        .filter(|cell| {
+            point_in_hex(
+                point,
+                cell.coord.center_xz(atlas.cell_radius_m),
+                atlas.cell_radius_m,
+            )
+        })
         .min_by(|left, right| {
             left.center_world
                 .xz()
@@ -626,7 +598,11 @@ fn mountain_path(manifest: &WorldManifest) -> Vec<DVec3> {
         .map(|step| {
             let x = step as f64 * radius * 0.24;
             let z = -0.22 * x + 52.0 * (x / (radius * 1.7)).sin();
-            DVec3::new(x, detailed_height(manifest.world_seed, radius, DVec2::new(x, z)), z)
+            DVec3::new(
+                x,
+                detailed_height(manifest.world_seed, radius, DVec2::new(x, z)),
+                z,
+            )
         })
         .collect()
 }
@@ -709,7 +685,8 @@ pub(crate) fn stable_entity(
 
 fn boundary_key(boundary: BoundaryKey) -> u128 {
     let low = ((boundary.low.q as i64 as u64) << 32) | boundary.low.r as i64 as u64 & 0xffff_ffff;
-    let high = ((boundary.high.q as i64 as u64) << 32) | boundary.high.r as i64 as u64 & 0xffff_ffff;
+    let high =
+        ((boundary.high.q as i64 as u64) << 32) | boundary.high.r as i64 as u64 & 0xffff_ffff;
     ((low as u128) << 64) | high as u128
 }
 
@@ -756,10 +733,30 @@ mod tests {
     fn atlas_contains_rich_per_cell_summaries() {
         let atlas = build_atlas(&build_fixture()).expect("atlas");
         assert_eq!(atlas.cells.len(), 19);
-        assert!(atlas.cells.iter().any(|cell| cell.elevation.relief_m > 45.0));
-        assert!(atlas.cells.iter().any(|cell| cell.landforms.mountain > 0.02));
-        assert!(atlas.cells.iter().any(|cell| cell.landforms.coast + cell.landforms.water > 0.2));
-        assert!(atlas.boundary_contracts.iter().all(|contract| contract.samples.len() == EDGE_PROFILE_SAMPLES));
+        assert!(
+            atlas
+                .cells
+                .iter()
+                .any(|cell| cell.elevation.relief_m > 45.0)
+        );
+        assert!(
+            atlas
+                .cells
+                .iter()
+                .any(|cell| cell.landforms.mountain > 0.02)
+        );
+        assert!(
+            atlas
+                .cells
+                .iter()
+                .any(|cell| cell.landforms.coast + cell.landforms.water > 0.2)
+        );
+        assert!(
+            atlas
+                .boundary_contracts
+                .iter()
+                .all(|contract| contract.samples.len() == EDGE_PROFILE_SAMPLES)
+        );
     }
 
     #[test]

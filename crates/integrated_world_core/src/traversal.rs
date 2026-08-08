@@ -17,7 +17,8 @@ struct QueueState {
 
 impl PartialEq for QueueState {
     fn eq(&self, other: &Self) -> bool {
-        self.index == other.index && self.estimated_total.to_bits() == other.estimated_total.to_bits()
+        self.index == other.index
+            && self.estimated_total.to_bits() == other.estimated_total.to_bits()
     }
 }
 
@@ -395,8 +396,10 @@ fn surface_for(point: &DVec3, history: &HistoryLedger) -> TraversalSurface {
     }) {
         TraversalSurface::Plaza
     } else if history.assets.iter().any(|asset| {
-        matches!(asset.kind, HistoricalAssetKind::OldRoad | HistoricalAssetKind::NewRoad)
-            && asset.anchor_world.distance(*point) < asset.extent_m.x * 0.6
+        matches!(
+            asset.kind,
+            HistoricalAssetKind::OldRoad | HistoricalAssetKind::NewRoad
+        ) && asset.anchor_world.distance(*point) < asset.extent_m.x * 0.6
     }) {
         TraversalSurface::Road
     } else {
@@ -404,7 +407,11 @@ fn surface_for(point: &DVec3, history: &HistoryLedger) -> TraversalSurface {
     }
 }
 
-fn nearest_history_asset(history: &HistoryLedger, point: DVec3, maximum_distance: f64) -> Option<EntityId> {
+fn nearest_history_asset(
+    history: &HistoryLedger,
+    point: DVec3,
+    maximum_distance: f64,
+) -> Option<EntityId> {
     history
         .assets
         .iter()
@@ -420,8 +427,10 @@ fn nearest_history_asset(history: &HistoryLedger, point: DVec3, maximum_distance
 
 fn corridor_modifier(history: &HistoryLedger, point: DVec3) -> f64 {
     let near_current_road = history.assets.iter().any(|asset| {
-        matches!(asset.kind, HistoricalAssetKind::NewRoad | HistoricalAssetKind::Bridge)
-            && asset.retired_by.is_none()
+        matches!(
+            asset.kind,
+            HistoricalAssetKind::NewRoad | HistoricalAssetKind::Bridge
+        ) && asset.retired_by.is_none()
             && asset.anchor_world.distance(point) <= asset.extent_m.x * 0.65
     });
     let near_old_road = history.assets.iter().any(|asset| {
@@ -472,7 +481,10 @@ fn is_route_passable(sample: &TerrainSample, bridge: Option<DVec3>) -> bool {
     if sample.cell.is_none() || sample.slope > 0.58 || sample.landform == LandformClass::Ocean {
         return false;
     }
-    if matches!(sample.landform, LandformClass::Estuary | LandformClass::Coast) {
+    if matches!(
+        sample.landform,
+        LandformClass::Estuary | LandformClass::Coast
+    ) {
         return bridge.is_some_and(|bridge| bridge.distance(sample.world_position) <= 34.0);
     }
     true
@@ -516,18 +528,17 @@ pub fn validate_traversal(
         .iter()
         .map(|node| (node.id, node))
         .collect::<BTreeMap<_, _>>();
-    let nodes_resolve = traversal.routes.iter().all(|route| {
-        route
-            .node_ids
-            .iter()
-            .all(|id| node_by_id.contains_key(id))
-    });
+    let nodes_resolve = traversal
+        .routes
+        .iter()
+        .all(|route| route.node_ids.iter().all(|id| node_by_id.contains_key(id)));
     let paths_on_world = traversal.routes.iter().all(|route| {
         route.world_path.iter().all(|point| {
             let sample = nearest_sample(&detailed.terrain, point.xz());
             sample.cell.is_some()
                 && sample.landform != LandformClass::Ocean
-                && sample.world_position.xz().distance(point.xz()) <= detailed.terrain.spacing_m * 1.5
+                && sample.world_position.xz().distance(point.xz())
+                    <= detailed.terrain.spacing_m * 1.5
         })
     });
     let grades_valid = traversal
@@ -539,13 +550,19 @@ pub fn validate_traversal(
             .routes
             .iter()
             .all(|route| route.target_landmark_id == atlas.landmark_id);
-    let multiple_cells = traversal
+    let multiple_cells = traversal.routes.iter().all(|route| {
+        route
+            .crossed_cells
+            .iter()
+            .copied()
+            .collect::<BTreeSet<_>>()
+            .len()
+            >= 3
+    });
+    let route_density = traversal
         .routes
         .iter()
-        .all(|route| route.crossed_cells.iter().copied().collect::<BTreeSet<_>>().len() >= 3);
-    let route_density = traversal.routes.iter().all(|route| {
-        route.world_path.len() > route.crossed_cells.len().saturating_mul(2)
-    });
+        .all(|route| route.world_path.len() > route.crossed_cells.len().saturating_mul(2));
     let grammar_set = traversal
         .routes
         .iter()
@@ -569,12 +586,16 @@ pub fn validate_traversal(
         ValidationCheck {
             name: "traversal-node-references".into(),
             passed: nodes_resolve,
-            detail: format!("{} route nodes resolve in the traversal graph", node_by_id.len()),
+            detail: format!(
+                "{} route nodes resolve in the traversal graph",
+                node_by_id.len()
+            ),
         },
         ValidationCheck {
             name: "routes-follow-materialized-world".into(),
             passed: paths_on_world,
-            detail: "route points stay on materialized land samples rather than cell-center chords".into(),
+            detail: "route points stay on materialized land samples rather than cell-center chords"
+                .into(),
         },
         ValidationCheck {
             name: "route-grade-budget".into(),
@@ -594,12 +615,16 @@ pub fn validate_traversal(
         ValidationCheck {
             name: "routes-are-denser-than-atlas-centers".into(),
             passed: route_density,
-            detail: "route polylines contain detailed terrain samples between cell transitions".into(),
+            detail: "route polylines contain detailed terrain samples between cell transitions"
+                .into(),
         },
         ValidationCheck {
             name: "scroll-grammar-coverage".into(),
             passed: required_grammars,
-            detail: format!("{} distinct scroll grammar classes are present", grammar_set.len()),
+            detail: format!(
+                "{} distinct scroll grammar classes are present",
+                grammar_set.len()
+            ),
         },
     ]
 }
@@ -646,10 +671,15 @@ mod tests {
         )
         .expect("base");
         let atlas = build_atlas(&base).expect("atlas");
-        let detailed = materialize_region(&atlas, &default_materialized_cells(&atlas)).expect("detailed");
+        let detailed =
+            materialize_region(&atlas, &default_materialized_cells(&atlas)).expect("detailed");
         let history = generate_history(&atlas, &detailed, &base.manifest).expect("history");
         let traversal = compile_traversal(&atlas, &detailed, &history).expect("traversal");
         assert_eq!(traversal.routes.len(), 3);
-        assert!(validate_traversal(&atlas, &detailed, &traversal).iter().all(|check| check.passed));
+        assert!(
+            validate_traversal(&atlas, &detailed, &traversal)
+                .iter()
+                .all(|check| check.passed)
+        );
     }
 }

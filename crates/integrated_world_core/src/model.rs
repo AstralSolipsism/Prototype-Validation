@@ -172,7 +172,9 @@ impl WorldAtlasManifest {
     }
 
     pub fn contract(&self, id: EntityId) -> Option<&BoundaryContract> {
-        self.boundary_contracts.iter().find(|contract| contract.id == id)
+        self.boundary_contracts
+            .iter()
+            .find(|contract| contract.id == id)
     }
 
     pub fn feature(&self, id: EntityId) -> Option<&AtlasFeature> {

@@ -48,13 +48,8 @@ pub fn materialize_region(
             let cell = nearest_cell(atlas, xz).filter(|coord| selected.contains(coord));
             let elevation = detailed_height(atlas.world_seed, atlas.cell_radius_m, xz);
             let slope = detailed_slope(atlas.world_seed, atlas.cell_radius_m, xz);
-            let landform = classify_landform(
-                atlas.world_seed,
-                atlas.cell_radius_m,
-                xz,
-                elevation,
-                slope,
-            );
+            let landform =
+                classify_landform(atlas.world_seed, atlas.cell_radius_m, xz, elevation, slope);
             let buildable = cell.is_some()
                 && slope <= 0.18
                 && elevation > 2.0
@@ -88,7 +83,11 @@ pub fn materialize_region(
 
     let mut cells = materialized_cells
         .iter()
-        .filter_map(|coord| atlas.cell(*coord).map(|spec| materialize_cell(atlas, spec, &terrain)))
+        .filter_map(|coord| {
+            atlas
+                .cell(*coord)
+                .map(|spec| materialize_cell(atlas, spec, &terrain))
+        })
         .collect::<Result<Vec<_>, _>>()?;
     cells.sort_by_key(|cell| cell.coord);
 
@@ -116,8 +115,7 @@ fn materialize_cell(
     for z_index in 0..resolution {
         let z = center.y - radius + 2.0 * radius * z_index as f64 / (resolution - 1) as f64;
         for x_index in 0..resolution {
-            let x = center.x - width_m * 0.5
-                + width_m * x_index as f64 / (resolution - 1) as f64;
+            let x = center.x - width_m * 0.5 + width_m * x_index as f64 / (resolution - 1) as f64;
             let xz = DVec2::new(x, z);
             if !point_in_hex(xz, center, radius) {
                 continue;
@@ -177,10 +175,7 @@ fn materialize_cell(
     })
 }
 
-fn region_bounds(
-    atlas: &WorldAtlasManifest,
-    selected: &BTreeSet<HexCoord>,
-) -> (DVec2, DVec2) {
+fn region_bounds(atlas: &WorldAtlasManifest, selected: &BTreeSet<HexCoord>) -> (DVec2, DVec2) {
     let half_width = 3.0_f64.sqrt() * atlas.cell_radius_m * 0.5;
     let mut minimum = DVec2::splat(f64::INFINITY);
     let mut maximum = DVec2::splat(f64::NEG_INFINITY);
@@ -288,10 +283,12 @@ fn accumulate_flow(width: usize, height: usize, samples: &mut [TerrainSample]) {
         .ln_1p();
     for sample in samples.iter_mut().filter(|sample| sample.cell.is_some()) {
         sample.flow_accumulation = sample.flow_accumulation.ln_1p() / maximum;
-        let distance_to_river = (sample.world_position.z
-            - river_center_z(sample.world_position.x, 128.0))
-        .abs();
-        if sample.flow_accumulation > 0.72 && distance_to_river < 38.0 && sample.world_position.y > 0.0 {
+        let distance_to_river =
+            (sample.world_position.z - river_center_z(sample.world_position.x, 128.0)).abs();
+        if sample.flow_accumulation > 0.72
+            && distance_to_river < 38.0
+            && sample.world_position.y > 0.0
+        {
             sample.landform = if sample.world_position.y < 8.0 {
                 LandformClass::Estuary
             } else {
@@ -394,10 +391,34 @@ mod tests {
         let coords = default_materialized_cells(&atlas);
         let region = materialize_region(&atlas, &coords).expect("region");
         assert!(region.cells.len() >= 7);
-        assert!(region.terrain.samples.iter().any(|sample| sample.landform == LandformClass::Mountain));
-        assert!(region.terrain.samples.iter().any(|sample| sample.landform == LandformClass::Valley));
-        assert!(region.terrain.samples.iter().any(|sample| sample.landform == LandformClass::Ocean));
-        assert!(region.terrain.samples.iter().any(|sample| sample.landform == LandformClass::Coast));
+        assert!(
+            region
+                .terrain
+                .samples
+                .iter()
+                .any(|sample| sample.landform == LandformClass::Mountain)
+        );
+        assert!(
+            region
+                .terrain
+                .samples
+                .iter()
+                .any(|sample| sample.landform == LandformClass::Valley)
+        );
+        assert!(
+            region
+                .terrain
+                .samples
+                .iter()
+                .any(|sample| sample.landform == LandformClass::Ocean)
+        );
+        assert!(
+            region
+                .terrain
+                .samples
+                .iter()
+                .any(|sample| sample.landform == LandformClass::Coast)
+        );
     }
 
     #[test]
@@ -428,7 +449,9 @@ mod tests {
         for cell in &region.cells {
             let atlas_cell = atlas.cell(cell.coord).expect("atlas cell");
             assert!((atlas_cell.elevation.mean_m - cell.recomputed_elevation.mean_m).abs() < 12.0);
-            assert!((atlas_cell.elevation.relief_m - cell.recomputed_elevation.relief_m).abs() < 24.0);
+            assert!(
+                (atlas_cell.elevation.relief_m - cell.recomputed_elevation.relief_m).abs() < 24.0
+            );
             assert!((cell.recomputed_landforms.total() - 1.0).abs() < 1.0e-9);
         }
     }

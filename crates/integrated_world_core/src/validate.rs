@@ -27,7 +27,9 @@ pub fn build_cross_scale_report(
         name: "cache-regeneration-stable".into(),
         passed: regenerated_detailed.semantic_fingerprint == detailed.semantic_fingerprint
             && regenerated_traversal.semantic_fingerprint == traversal.semantic_fingerprint,
-        detail: "deleting detailed terrain and route caches reproduces identical semantic fingerprints".into(),
+        detail:
+            "deleting detailed terrain and route caches reproduces identical semantic fingerprints"
+                .into(),
     });
 
     let bindings = object_bindings(atlas, history, base);
@@ -58,7 +60,10 @@ fn validate_atlas(atlas: &WorldAtlasManifest) -> Vec<ValidationCheck> {
         .cells
         .iter()
         .all(|cell| cell.elevation.maximum_m >= cell.elevation.minimum_m)
-        && atlas.cells.iter().any(|cell| cell.elevation.relief_m > 55.0)
+        && atlas
+            .cells
+            .iter()
+            .any(|cell| cell.elevation.relief_m > 55.0)
         && atlas
             .cells
             .iter()
@@ -156,9 +161,10 @@ fn validate_detailed_against_atlas(
         .iter()
         .filter(|sample| sample.cell.is_some())
         .map(|sample| sample.world_position.y)
-        .fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), elevation| {
-            (min.min(elevation), max.max(elevation))
-        });
+        .fold(
+            (f64::INFINITY, f64::NEG_INFINITY),
+            |(min, max), elevation| (min.min(elevation), max.max(elevation)),
+        );
     let relief = recognizable_relief.1 - recognizable_relief.0;
     let landforms = detailed
         .terrain
@@ -183,7 +189,10 @@ fn validate_detailed_against_atlas(
         .iter()
         .filter(|sample| {
             sample.cell.is_some()
-                && matches!(sample.landform, LandformClass::Floodplain | LandformClass::Valley | LandformClass::Estuary)
+                && matches!(
+                    sample.landform,
+                    LandformClass::Floodplain | LandformClass::Valley | LandformClass::Estuary
+                )
                 && sample.flow_accumulation > 0.55
         })
         .all(|sample| {
@@ -195,22 +204,30 @@ fn validate_detailed_against_atlas(
         ValidationCheck {
             name: "detailed-terrain-matches-atlas-summary".into(),
             passed: summary_match,
-            detail: format!("{} materialized cells recompute Atlas statistics within sampling tolerances", detailed.cells.len()),
+            detail: format!(
+                "{} materialized cells recompute Atlas statistics within sampling tolerances",
+                detailed.cells.len()
+            ),
         },
         ValidationCheck {
             name: "detailed-cell-boundaries-identical".into(),
             passed: shared_profiles,
-            detail: "adjacent independently addressable cells reuse the same boundary profile samples".into(),
+            detail:
+                "adjacent independently addressable cells reuse the same boundary profile samples"
+                    .into(),
         },
         ValidationCheck {
             name: "detailed-terrain-has-recognizable-relief".into(),
             passed: relief > 120.0 && required_landforms,
-            detail: format!("materialized region relief is {relief:.1} m and includes mountain-to-ocean landforms"),
+            detail: format!(
+                "materialized region relief is {relief:.1} m and includes mountain-to-ocean landforms"
+            ),
         },
         ValidationCheck {
             name: "river-follows-local-low-ground".into(),
             passed: river_is_low,
-            detail: "high-accumulation valley and estuary samples remain near local terrain minima".into(),
+            detail: "high-accumulation valley and estuary samples remain near local terrain minima"
+                .into(),
         },
     ]
 }
@@ -273,36 +290,49 @@ fn validate_identity_chain(
         .is_some_and(|settlement| settlement.id == atlas.settlement_id)
         && history.settlement_id == atlas.settlement_id;
     let history_ids_on_atlas = history.events.iter().all(|event| {
-        atlas.cells.iter().any(|cell| cell.history.event_ids.contains(&event.id))
+        atlas
+            .cells
+            .iter()
+            .any(|cell| cell.history.event_ids.contains(&event.id))
             || event.kind == HistoryEventKind::Migration
     });
-    let building_identity = base.settlements.iter().flat_map(|settlement| &settlement.buildings).all(|building| {
-        building.instance_id.as_u128() != 0
-            && atlas
-                .cell(base.settlements[0].cell)
-                .is_some()
-    });
+    let building_identity = base
+        .settlements
+        .iter()
+        .flat_map(|settlement| &settlement.buildings)
+        .all(|building| {
+            building.instance_id.as_u128() != 0 && atlas.cell(base.settlements[0].cell).is_some()
+        });
 
     vec![
         ValidationCheck {
             name: "landmark-identity-cross-scale".into(),
             passed: landmark_identity,
-            detail: format!("Atlas feature, local route target and LOD anchor all use landmark {}", atlas.landmark_id),
+            detail: format!(
+                "Atlas feature, local route target and LOD anchor all use landmark {}",
+                atlas.landmark_id
+            ),
         },
         ValidationCheck {
             name: "settlement-identity-cross-scale".into(),
             passed: settlement_identity,
-            detail: format!("Atlas, history and P4A settlement use stable ID {}", atlas.settlement_id),
+            detail: format!(
+                "Atlas, history and P4A settlement use stable ID {}",
+                atlas.settlement_id
+            ),
         },
         ValidationCheck {
             name: "atlas-history-references".into(),
             passed: history_ids_on_atlas,
-            detail: "settled Atlas cells reference the same history events rendered in the local world".into(),
+            detail:
+                "settled Atlas cells reference the same history events rendered in the local world"
+                    .into(),
         },
         ValidationCheck {
             name: "building-instance-identities-retained".into(),
             passed: building_identity,
-            detail: "P3 building instance IDs remain stable when embedded in the integrated world".into(),
+            detail: "P3 building instance IDs remain stable when embedded in the integrated world"
+                .into(),
         },
     ]
 }
@@ -319,7 +349,11 @@ fn object_bindings(
         .expect("landmark feature");
     let mut bindings = vec![CrossScaleObjectBinding {
         object_id: landmark.id,
-        atlas_cell: landmark.touched_cells.first().copied().unwrap_or(HexCoord::ZERO),
+        atlas_cell: landmark
+            .touched_cells
+            .first()
+            .copied()
+            .unwrap_or(HexCoord::ZERO),
         local_anchor: landmark.path_world[0],
         atlas_feature_id: Some(landmark.id),
         history_event_id: history
@@ -336,17 +370,20 @@ fn object_bindings(
         history_event_id: Some(asset.created_by),
     }));
     bindings.extend(base.settlements.iter().flat_map(|settlement| {
-        settlement.buildings.iter().map(move |building| CrossScaleObjectBinding {
-            object_id: EntityId::from_u128(building.instance_id.as_u128()),
-            atlas_cell: settlement.cell,
-            local_anchor: building.local_position,
-            atlas_feature_id: Some(EntityId::from_u128(settlement.id.as_u128())),
-            history_event_id: history
-                .events
-                .iter()
-                .find(|event| event.kind == HistoryEventKind::SettlementFounded)
-                .map(|event| event.id),
-        })
+        settlement
+            .buildings
+            .iter()
+            .map(move |building| CrossScaleObjectBinding {
+                object_id: EntityId::from_u128(building.instance_id.as_u128()),
+                atlas_cell: settlement.cell,
+                local_anchor: building.local_position,
+                atlas_feature_id: Some(EntityId::from_u128(settlement.id.as_u128())),
+                history_event_id: history
+                    .events
+                    .iter()
+                    .find(|event| event.kind == HistoryEventKind::SettlementFounded)
+                    .map(|event| event.id),
+            })
     }));
     bindings.sort_by_key(|binding| binding.object_id);
     bindings
@@ -381,12 +418,14 @@ mod tests {
         )
         .expect("base");
         let mut atlas = build_atlas(&base).expect("atlas");
-        let detailed = materialize_region(&atlas, &default_materialized_cells(&atlas)).expect("detailed");
+        let detailed =
+            materialize_region(&atlas, &default_materialized_cells(&atlas)).expect("detailed");
         let history = generate_history(&atlas, &detailed, &base.manifest).expect("history");
         apply_history_to_atlas(&mut atlas, &history).expect("history atlas");
         let traversal = compile_traversal(&atlas, &detailed, &history).expect("traversal");
-        let report = build_cross_scale_report(&atlas, &detailed, &history, &traversal, &base.manifest)
-            .expect("report");
+        let report =
+            build_cross_scale_report(&atlas, &detailed, &history, &traversal, &base.manifest)
+                .expect("report");
         let failed = report
             .checks
             .iter()

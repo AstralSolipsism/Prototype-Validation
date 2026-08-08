@@ -21,22 +21,28 @@ pub fn generate_history(
     detailed: &DetailedRegion,
     base: &WorldManifest,
 ) -> Result<HistoryLedger, serde_json::Error> {
-    let settlement = base
-        .settlements
-        .first()
-        .expect("P4A contains a settlement");
+    let settlement = base.settlements.first().expect("P4A contains a settlement");
     let port_cell = settlement.cell;
     let port_anchor = choose_port_anchor(atlas, detailed, port_cell);
     let farmland_anchor = choose_farmland_anchor(detailed, port_anchor);
     let defensive_anchor = choose_defensive_anchor(detailed, port_anchor);
     let flood_anchor = DVec3::new(
         port_anchor.x - 36.0,
-        terrain_height_near(detailed, DVec2::new(port_anchor.x - 36.0, port_anchor.z + 24.0)),
+        terrain_height_near(
+            detailed,
+            DVec2::new(port_anchor.x - 36.0, port_anchor.z + 24.0),
+        ),
         port_anchor.z + 24.0,
     );
     let bridge_anchor = DVec3::new(
         port_anchor.x - 48.0,
-        terrain_height_near(detailed, DVec2::new(port_anchor.x - 48.0, river_center_z(port_anchor.x - 48.0, atlas.cell_radius_m))) + 1.5,
+        terrain_height_near(
+            detailed,
+            DVec2::new(
+                port_anchor.x - 48.0,
+                river_center_z(port_anchor.x - 48.0, atlas.cell_radius_m),
+            ),
+        ) + 1.5,
         river_center_z(port_anchor.x - 48.0, atlas.cell_radius_m),
     );
 
@@ -187,7 +193,11 @@ pub fn generate_history(
         HistoricalAsset {
             id: new_road_asset,
             kind: HistoricalAssetKind::NewRoad,
-            anchor_world: DVec3::new(port_anchor.x - 20.0, port_anchor.y + 8.0, port_anchor.z - 42.0),
+            anchor_world: DVec3::new(
+                port_anchor.x - 20.0,
+                port_anchor.y + 8.0,
+                port_anchor.z - 42.0,
+            ),
             extent_m: DVec2::new(140.0, 10.0),
             created_by: reconstruction,
             retired_by: None,
@@ -205,11 +215,19 @@ pub fn generate_history(
         HistoricalAsset {
             id: new_quarter_asset,
             kind: HistoricalAssetKind::NewQuarter,
-            anchor_world: DVec3::new(port_anchor.x - 18.0, port_anchor.y + 8.0, port_anchor.z - 62.0),
+            anchor_world: DVec3::new(
+                port_anchor.x - 18.0,
+                port_anchor.y + 8.0,
+                port_anchor.z - 62.0,
+            ),
             extent_m: DVec2::new(82.0, 62.0),
             created_by: reconstruction,
             retired_by: None,
-            source_cell: cell_at(detailed, DVec2::new(port_anchor.x - 18.0, port_anchor.z - 62.0)).unwrap_or(port_cell),
+            source_cell: cell_at(
+                detailed,
+                DVec2::new(port_anchor.x - 18.0, port_anchor.z - 62.0),
+            )
+            .unwrap_or(port_cell),
         },
         HistoricalAsset {
             id: farmland_asset,
@@ -241,7 +259,11 @@ pub fn generate_history(
         HistoricalAsset {
             id: monument_asset,
             kind: HistoricalAssetKind::Monument,
-            anchor_world: DVec3::new(port_anchor.x - 4.0, port_anchor.y + 3.0, port_anchor.z - 20.0),
+            anchor_world: DVec3::new(
+                port_anchor.x - 4.0,
+                port_anchor.y + 3.0,
+                port_anchor.z - 20.0,
+            ),
             extent_m: DVec2::new(8.0, 8.0),
             created_by: reconstruction,
             retired_by: None,
@@ -250,13 +272,69 @@ pub fn generate_history(
     ];
 
     let land_use = vec![
-        zone(atlas, 0x201, LandUseKind::Harbor, assets[0].anchor_world, 44.0, harbor, port_cell),
-        zone(atlas, 0x202, LandUseKind::OldTown, port_anchor, 52.0, foundation, port_cell),
-        zone(atlas, 0x203, LandUseKind::NewTown, assets[5].anchor_world, 58.0, reconstruction, assets[5].source_cell),
-        zone(atlas, 0x204, LandUseKind::Farmland, farmland_anchor, 76.0, agriculture, assets[6].source_cell),
-        zone(atlas, 0x205, LandUseKind::Fortification, defensive_anchor, 34.0, fortification, assets[7].source_cell),
-        zone(atlas, 0x206, LandUseKind::Ruins, defensive_anchor, 38.0, conflict, assets[8].source_cell),
-        zone(atlas, 0x207, LandUseKind::Commons, DVec3::new(port_anchor.x - 6.0, port_anchor.y, port_anchor.z - 26.0), 28.0, reconstruction, port_cell),
+        zone(
+            atlas,
+            0x201,
+            LandUseKind::Harbor,
+            assets[0].anchor_world,
+            44.0,
+            harbor,
+            port_cell,
+        ),
+        zone(
+            atlas,
+            0x202,
+            LandUseKind::OldTown,
+            port_anchor,
+            52.0,
+            foundation,
+            port_cell,
+        ),
+        zone(
+            atlas,
+            0x203,
+            LandUseKind::NewTown,
+            assets[5].anchor_world,
+            58.0,
+            reconstruction,
+            assets[5].source_cell,
+        ),
+        zone(
+            atlas,
+            0x204,
+            LandUseKind::Farmland,
+            farmland_anchor,
+            76.0,
+            agriculture,
+            assets[6].source_cell,
+        ),
+        zone(
+            atlas,
+            0x205,
+            LandUseKind::Fortification,
+            defensive_anchor,
+            34.0,
+            fortification,
+            assets[7].source_cell,
+        ),
+        zone(
+            atlas,
+            0x206,
+            LandUseKind::Ruins,
+            defensive_anchor,
+            38.0,
+            conflict,
+            assets[8].source_cell,
+        ),
+        zone(
+            atlas,
+            0x207,
+            LandUseKind::Commons,
+            DVec3::new(port_anchor.x - 6.0, port_anchor.y, port_anchor.z - 26.0),
+            28.0,
+            reconstruction,
+            port_cell,
+        ),
     ];
 
     let mut ledger = HistoryLedger {
@@ -271,7 +349,10 @@ pub fn generate_history(
     Ok(ledger)
 }
 
-pub fn apply_history_to_atlas(atlas: &mut WorldAtlasManifest, history: &HistoryLedger) -> Result<(), serde_json::Error> {
+pub fn apply_history_to_atlas(
+    atlas: &mut WorldAtlasManifest,
+    history: &HistoryLedger,
+) -> Result<(), serde_json::Error> {
     for cell in &mut atlas.cells {
         let event_ids = history
             .events
@@ -308,14 +389,21 @@ fn dominant_economy(zones: &[&LandUseZone]) -> String {
         "maritime trade and fishery".into()
     } else if zones.iter().any(|zone| zone.kind == LandUseKind::Farmland) {
         "agriculture".into()
-    } else if zones.iter().any(|zone| matches!(zone.kind, LandUseKind::OldTown | LandUseKind::NewTown)) {
+    } else if zones
+        .iter()
+        .any(|zone| matches!(zone.kind, LandUseKind::OldTown | LandUseKind::NewTown))
+    {
         "craft and local exchange".into()
     } else {
         "sparse rural use".into()
     }
 }
 
-fn choose_port_anchor(atlas: &WorldAtlasManifest, detailed: &DetailedRegion, port_cell: HexCoord) -> DVec3 {
+fn choose_port_anchor(
+    atlas: &WorldAtlasManifest,
+    detailed: &DetailedRegion,
+    port_cell: HexCoord,
+) -> DVec3 {
     detailed
         .terrain
         .samples
@@ -378,7 +466,10 @@ fn choose_defensive_anchor(detailed: &DetailedRegion, port: DVec3) -> DVec3 {
             sample.cell.is_some()
                 && sample.world_position.distance(port) >= 95.0
                 && sample.world_position.distance(port) <= 240.0
-                && matches!(sample.landform, LandformClass::Ridge | LandformClass::Mountain | LandformClass::Hillslope)
+                && matches!(
+                    sample.landform,
+                    LandformClass::Ridge | LandformClass::Mountain | LandformClass::Hillslope
+                )
         })
         .max_by(|left, right| {
             defensive_score(left, port)
@@ -391,7 +482,9 @@ fn choose_defensive_anchor(detailed: &DetailedRegion, port: DVec3) -> DVec3 {
 }
 
 fn defensive_score(sample: &TerrainSample, port: DVec3) -> f64 {
-    sample.world_position.y * 1.6 - sample.slope * 80.0 - (sample.world_position.distance(port) - 160.0).abs() * 0.2
+    sample.world_position.y * 1.6
+        - sample.slope * 80.0
+        - (sample.world_position.distance(port) - 160.0).abs() * 0.2
 }
 
 fn zone(
@@ -456,8 +549,16 @@ fn terrain_height_near(detailed: &DetailedRegion, point: DVec2) -> f64 {
 }
 
 pub fn validate_history(history: &HistoryLedger) -> Vec<ValidationCheck> {
-    let event_ids = history.events.iter().map(|event| event.id).collect::<BTreeSet<_>>();
-    let asset_ids = history.assets.iter().map(|asset| asset.id).collect::<BTreeSet<_>>();
+    let event_ids = history
+        .events
+        .iter()
+        .map(|event| event.id)
+        .collect::<BTreeSet<_>>();
+    let asset_ids = history
+        .assets
+        .iter()
+        .map(|asset| asset.id)
+        .collect::<BTreeSet<_>>();
     let chronological = history
         .events
         .windows(2)
@@ -473,7 +574,9 @@ pub fn validate_history(history: &HistoryLedger) -> Vec<ValidationCheck> {
     });
     let assets_traceable = history.assets.iter().all(|asset| {
         event_ids.contains(&asset.created_by)
-            && asset.retired_by.is_none_or(|event| event_ids.contains(&event))
+            && asset
+                .retired_by
+                .is_none_or(|event| event_ids.contains(&event))
     });
     let created_assets_resolve = history.events.iter().all(|event| {
         event
@@ -490,7 +593,10 @@ pub fn validate_history(history: &HistoryLedger) -> Vec<ValidationCheck> {
         ValidationCheck {
             name: "history-chronological".into(),
             passed: chronological,
-            detail: format!("{} events are sorted by year and stable ID", history.events.len()),
+            detail: format!(
+                "{} events are sorted by year and stable ID",
+                history.events.len()
+            ),
         },
         ValidationCheck {
             name: "history-causes-precede-effects".into(),
@@ -500,18 +606,31 @@ pub fn validate_history(history: &HistoryLedger) -> Vec<ValidationCheck> {
         ValidationCheck {
             name: "historical-assets-traceable".into(),
             passed: assets_traceable && created_assets_resolve,
-            detail: format!("{} historical assets map to creation and retirement events", history.assets.len()),
+            detail: format!(
+                "{} historical assets map to creation and retirement events",
+                history.assets.len()
+            ),
         },
         ValidationCheck {
             name: "land-use-traceable".into(),
             passed: zones_traceable,
-            detail: format!("{} land-use zones map to an establishing event", history.land_use.len()),
+            detail: format!(
+                "{} land-use zones map to an establishing event",
+                history.land_use.len()
+            ),
         },
         ValidationCheck {
             name: "history-has-five-or-more-stages".into(),
             passed: history.events.len() >= 5
-                && history.events.iter().map(|event| event.kind).collect::<BTreeSet<_>>().len() >= 5,
-            detail: "migration, foundation, economy, infrastructure and disruption are represented".into(),
+                && history
+                    .events
+                    .iter()
+                    .map(|event| event.kind)
+                    .collect::<BTreeSet<_>>()
+                    .len()
+                    >= 5,
+            detail: "migration, foundation, economy, infrastructure and disruption are represented"
+                .into(),
         },
     ]
 }
@@ -519,7 +638,10 @@ pub fn validate_history(history: &HistoryLedger) -> Vec<ValidationCheck> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{atlas::build_atlas, terrain::{default_materialized_cells, materialize_region}};
+    use crate::{
+        atlas::build_atlas,
+        terrain::{default_materialized_cells, materialize_region},
+    };
     use world_generation_core::{
         GeneratorVersion, TraversalOrder, WorldGenerationConfig, generate_world_with_order,
     };
@@ -539,7 +661,8 @@ mod tests {
         )
         .expect("base");
         let atlas = build_atlas(&base).expect("atlas");
-        let detailed = materialize_region(&atlas, &default_materialized_cells(&atlas)).expect("detailed");
+        let detailed =
+            materialize_region(&atlas, &default_materialized_cells(&atlas)).expect("detailed");
         (atlas, detailed, base.manifest)
     }
 
@@ -548,8 +671,18 @@ mod tests {
         let (atlas, detailed, base) = fixture();
         let history = generate_history(&atlas, &detailed, &base).expect("history");
         assert!(history.events.len() >= 9);
-        assert!(history.assets.iter().any(|asset| asset.kind == HistoricalAssetKind::Harbor));
-        assert!(history.assets.iter().any(|asset| asset.kind == HistoricalAssetKind::Ruins));
+        assert!(
+            history
+                .assets
+                .iter()
+                .any(|asset| asset.kind == HistoricalAssetKind::Harbor)
+        );
+        assert!(
+            history
+                .assets
+                .iter()
+                .any(|asset| asset.kind == HistoricalAssetKind::Ruins)
+        );
         assert!(validate_history(&history).iter().all(|check| check.passed));
     }
 }

@@ -37,13 +37,7 @@ pub fn compile_integrated_world(
     let history = generate_history(&atlas, &detailed, &base.manifest)?;
     apply_history_to_atlas(&mut atlas, &history)?;
     let traversal = compile_traversal(&atlas, &detailed, &history)?;
-    let report = build_cross_scale_report(
-        &atlas,
-        &detailed,
-        &history,
-        &traversal,
-        &base.manifest,
-    )?;
+    let report = build_cross_scale_report(&atlas, &detailed, &history, &traversal, &base.manifest)?;
     let failed = report
         .checks
         .iter()
@@ -57,7 +51,12 @@ pub fn compile_integrated_world(
         .manifest
         .settlements
         .iter()
-        .flat_map(|settlement| settlement.buildings.iter().map(|building| building.instance_id))
+        .flat_map(|settlement| {
+            settlement
+                .buildings
+                .iter()
+                .map(|building| building.instance_id)
+        })
         .collect();
     Ok(IntegratedWorld {
         atlas,

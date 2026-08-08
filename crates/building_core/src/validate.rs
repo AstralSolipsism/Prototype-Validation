@@ -1,6 +1,6 @@
 use crate::model::*;
 use std::collections::{BTreeMap, BTreeSet};
-use std::error::Error;
+use std::error::Error as StdError;
 use std::fmt;
 use thiserror::Error;
 use world_ids::{BuildingLevelId, OpeningId, RoofRegionId, RoomId, StairId, WallId};
@@ -106,7 +106,7 @@ impl fmt::Display for ValidationReport {
     }
 }
 
-impl Error for ValidationReport {}
+impl StdError for ValidationReport {}
 
 pub(crate) struct BlueprintIndex<'a> {
     pub levels: BTreeMap<BuildingLevelId, &'a BuildingLevel>,

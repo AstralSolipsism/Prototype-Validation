@@ -162,6 +162,20 @@ def finalize_visual() -> None:
         "&& let Some(mut material) = materials.get_mut(&material_handle.0)",
         1,
     )
+    text = text.replace(
+        "\nfn update_camera_and_route_subject(",
+        "\n#[allow(clippy::too_many_arguments)]\n"
+        "// Bevy injects these resources and queries as independent system parameters.\n"
+        "fn update_camera_and_route_subject(",
+        1,
+    )
+    text = text.replace(
+        "\nfn spawn_segment(",
+        "\n#[allow(clippy::too_many_arguments)]\n"
+        "// A segment is one rendering primitive with explicit geometry, material and visibility data.\n"
+        "fn spawn_segment(",
+        1,
+    )
 
     if (
         "visuals: Query<(Entity, &VisualTag)>" in text

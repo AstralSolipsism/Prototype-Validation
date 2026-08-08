@@ -5718,6 +5718,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "world_visual"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "building_core",
+ "glam",
+ "p3_building_scenario",
+ "p4_world_scenario",
+ "scroll_camera_core",
+ "world_generation_core",
+]
+
+[[package]]
 name = "writeable"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

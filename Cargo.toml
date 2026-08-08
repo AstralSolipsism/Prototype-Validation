@@ -14,6 +14,8 @@ members = [
     "crates/p3_building_scenario",
     "crates/world_generation_core",
     "crates/p4_world_scenario",
+    "crates/integrated_world_core",
+    "crates/p4_integrated_scenario",
     "apps/camera_trace",
     "apps/camera_routes",
     "apps/p2_reference_frame_trace",
@@ -22,6 +24,7 @@ members = [
     "apps/building_visual",
     "apps/p4_world_trace",
     "apps/world_visual",
+    "apps/p4_integrated_trace",
 ]
 
 [workspace.package]

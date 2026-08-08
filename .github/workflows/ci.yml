@@ -67,6 +67,7 @@ jobs:
           --exclude camera_routes
           --exclude mobile_region_visual
           --exclude building_visual
+          --exclude world_visual
           --all-targets --locked
 
       - name: Generate P1 headless camera trace

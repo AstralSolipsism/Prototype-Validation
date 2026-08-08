@@ -17,7 +17,9 @@ concurrency:
 jobs:
   integrated-autofix:
     name: temporary integrated P4 source autofix
-    if: github.event_name == 'push' && github.ref == 'refs/heads/agent/p4-integrated-world-pipeline'
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/agent/p4-integrated-world-pipeline') ||
+      (github.event_name == 'pull_request' && github.head_ref == 'agent/p4-integrated-world-pipeline')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

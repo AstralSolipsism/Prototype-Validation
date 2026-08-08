@@ -1837,6 +1837,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "building_visual"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "building_core",
+ "p3_building_scenario",
+ "world_ids",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

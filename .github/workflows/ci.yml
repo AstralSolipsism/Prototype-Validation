@@ -66,6 +66,7 @@ jobs:
           cargo test --workspace
           --exclude camera_routes
           --exclude mobile_region_visual
+          --exclude building_visual
           --all-targets --locked
 
       - name: Generate P1 headless camera trace

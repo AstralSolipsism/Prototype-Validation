@@ -1827,6 +1827,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "building_core"
+version = "0.1.0"
+dependencies = [
+ "glam",
+ "serde",
+ "thiserror 2.0.20",
+ "world_ids",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3776,6 +3786,25 @@ dependencies = [
  "serde_json",
  "world_ids",
  "world_math",
+]
+
+[[package]]
+name = "p3_building_scenario"
+version = "0.1.0"
+dependencies = [
+ "building_core",
+ "glam",
+ "world_ids",
+]
+
+[[package]]
+name = "p3_building_trace"
+version = "0.1.0"
+dependencies = [
+ "building_core",
+ "p3_building_scenario",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

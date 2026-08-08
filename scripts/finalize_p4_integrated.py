@@ -7,23 +7,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def replace_once(text: str, old: str, new: str, label: str) -> str:
-    if old not in text:
-        if new in text:
-            return text
-        raise RuntimeError(f"{label}: neither original nor finalized form was found")
-    return text.replace(old, new, 1)
-
-
-def replace_pattern_once(text: str, pattern: str, replacement: str, label: str) -> str:
-    updated, count = re.subn(pattern, replacement, text, count=1, flags=re.DOTALL)
-    if count == 1:
-        return updated
-    if replacement in text:
-        return text
-    raise RuntimeError(f"{label}: pattern did not match exactly once")
-
-
 def finalize_atlas() -> None:
     path = ROOT / "crates/integrated_world_core/src/atlas.rs"
     text = path.read_text(encoding="utf-8")
@@ -55,19 +38,22 @@ def finalize_atlas() -> None:
             touched.insert(cell.coord);
         }
 """
-    text = replace_once(text, old, new, "Atlas touched-cell selection")
+    if old in text:
+        text = text.replace(old, new, 1)
+    elif "}) && cell.center_world.xz().distance(point.xz()) <= manifest.cell_radius_m * 1.35" not in text:
+        raise RuntimeError("Atlas touched-cell selection is neither original nor finalized")
     path.write_text(text, encoding="utf-8")
 
 
 def finalize_traversal() -> None:
     path = ROOT / "crates/integrated_world_core/src/traversal.rs"
     text = path.read_text(encoding="utf-8")
-    text = replace_once(
-        text,
-        "fn nearest_sample<'a>(grid: &'a TerrainGrid, point: DVec2) -> &'a TerrainSample {",
-        "fn nearest_sample(grid: &TerrainGrid, point: DVec2) -> &TerrainSample {",
-        "Traversal lifetime elision",
-    )
+    old = "fn nearest_sample<'a>(grid: &'a TerrainGrid, point: DVec2) -> &'a TerrainSample {"
+    new = "fn nearest_sample(grid: &TerrainGrid, point: DVec2) -> &TerrainSample {"
+    if old in text:
+        text = text.replace(old, new, 1)
+    elif new not in text:
+        raise RuntimeError("Traversal nearest_sample signature is neither original nor finalized")
     path.write_text(text, encoding="utf-8")
 
 
@@ -79,6 +65,10 @@ def finalize_history() -> None:
         "use std::collections::{BTreeMap, BTreeSet};",
         1,
     )
+    if "let event_cells = history" in text and ".collect::<BTreeMap<_, _>>();" in text:
+        path.write_text(text, encoding="utf-8")
+        return
+
     function = '''pub fn apply_history_to_atlas(
     atlas: &mut WorldAtlasManifest,
     history: &HistoryLedger,
@@ -137,18 +127,28 @@ def finalize_history() -> None:
     atlas.atlas_fingerprint = digest(atlas)?;
     Ok(())
 }'''
-    text = replace_pattern_once(
+    text, count = re.subn(
+        r"pub fn apply_history_to_atlas\(.*?\n}\n(?=\n?fn dominant_economy)",
+        function + "\n",
         text,
-        r"pub fn apply_history_to_atlas\(.*?\n}\n(?=\nfn dominant_economy)",
-        function,
-        "Atlas history projection",
+        count=1,
+        flags=re.DOTALL,
     )
+    if count != 1:
+        raise RuntimeError("Atlas history projection could not be finalized")
     path.write_text(text, encoding="utf-8")
 
 
 def finalize_visual() -> None:
     path = ROOT / "apps/integrated_world_visual/src/main.rs"
     text = path.read_text(encoding="utf-8")
+    if (
+        "visuals: Query<(Entity, &VisualTag)>" in text
+        and "mut commands: Commands" in text
+        and "commands\n            .entity(entity)" in text
+    ):
+        return
+
     function = '''fn update_visual_visibility(
     state: Res<VisualState>,
     visuals: Query<(Entity, &VisualTag)>,
@@ -177,12 +177,15 @@ def finalize_visual() -> None:
         });
     }
 }'''
-    text = replace_pattern_once(
+    text, count = re.subn(
+        r"fn update_visual_visibility\(.*?\n}\n(?=\n?fn update_atlas_cell_materials)",
+        function + "\n",
         text,
-        r"fn update_visual_visibility\(.*?\n}\n(?=\nfn update_atlas_cell_materials)",
-        function,
-        "Bevy visibility system",
+        count=1,
+        flags=re.DOTALL,
     )
+    if count != 1:
+        raise RuntimeError("Bevy visibility system could not be finalized")
     path.write_text(text, encoding="utf-8")
 
 

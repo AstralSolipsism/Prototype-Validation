@@ -96,10 +96,11 @@ pub fn compile_traversal(
             .as_u128(),
         );
 
-        let world_path = simplified
+        let terrain_path = simplified
             .iter()
             .map(|index| detailed.terrain.samples[*index].world_position + DVec3::Y * 0.6)
             .collect::<Vec<_>>();
+        let world_path = engineer_route_profile(&terrain_path, 0.48);
         let port_index = world_path
             .iter()
             .enumerate()
@@ -201,43 +202,60 @@ pub fn compile_traversal(
 }
 
 fn route_start_samples(detailed: &DetailedRegion, port: DVec3) -> [DVec3; 3] {
-    let candidates = detailed
-        .terrain
-        .samples
-        .iter()
-        .filter(|sample| sample.cell.is_some() && is_route_passable(sample, None))
-        .collect::<Vec<_>>();
-    let west = candidates
-        .iter()
-        .min_by(|left, right| {
-            left.world_position
-                .x
-                .total_cmp(&right.world_position.x)
-                .then_with(|| left.world_position.z.total_cmp(&right.world_position.z))
-        })
-        .map(|sample| sample.world_position)
-        .unwrap_or(port - DVec3::X * 200.0);
-    let north = candidates
-        .iter()
-        .min_by(|left, right| {
-            left.world_position
-                .z
-                .total_cmp(&right.world_position.z)
-                .then_with(|| left.world_position.x.total_cmp(&right.world_position.x))
-        })
-        .map(|sample| sample.world_position)
-        .unwrap_or(port - DVec3::Z * 180.0);
-    let south = candidates
-        .iter()
-        .max_by(|left, right| {
-            left.world_position
-                .z
-                .total_cmp(&right.world_position.z)
-                .then_with(|| right.world_position.x.total_cmp(&left.world_position.x))
-        })
-        .map(|sample| sample.world_position)
-        .unwrap_or(port + DVec3::Z * 180.0);
-    [west, north, south]
+    let port_cell = nearest_sample(&detailed.terrain, port.xz())
+        .cell
+        .unwrap_or(HexCoord::ZERO);
+    let mut candidate_cells = detailed.materialized_cells.clone();
+    candidate_cells.sort_by(|left, right| {
+        right
+            .distance(port_cell)
+            .cmp(&left.distance(port_cell))
+            .then_with(|| left.cmp(right))
+    });
+
+    let mut selected_cells = BTreeSet::new();
+    let mut starts = Vec::new();
+    for minimum_distance in [2, 0] {
+        for cell in &candidate_cells {
+            if selected_cells.contains(cell) || cell.distance(port_cell) < minimum_distance {
+                continue;
+            }
+            let sample = detailed
+                .terrain
+                .samples
+                .iter()
+                .filter(|sample| sample.cell == Some(*cell) && is_route_passable(sample, None))
+                .max_by(|left, right| {
+                    left.world_position
+                        .xz()
+                        .distance_squared(port.xz())
+                        .total_cmp(&right.world_position.xz().distance_squared(port.xz()))
+                });
+            if let Some(sample) = sample {
+                selected_cells.insert(*cell);
+                starts.push(sample.world_position);
+            }
+            if starts.len() == 3 {
+                return [starts[0], starts[1], starts[2]];
+            }
+        }
+    }
+
+    let fallbacks = [
+        port - DVec3::X * 240.0,
+        port - DVec3::Z * 220.0,
+        port + DVec3::Z * 220.0,
+    ];
+    for fallback in fallbacks {
+        if starts.len() == 3 {
+            break;
+        }
+        let sample = nearest_passable_index(&detailed.terrain, fallback.xz(), None)
+            .map(|index| detailed.terrain.samples[index].world_position)
+            .unwrap_or(fallback);
+        starts.push(sample);
+    }
+    [starts[0], starts[1], starts[2]]
 }
 
 fn find_path(
@@ -276,14 +294,12 @@ fn find_path(
                 .max(0.01);
             let grade =
                 (current_sample.world_position.y - sample.world_position.y).abs() / horizontal;
-            if grade > 0.58 + 1.0e-9 {
-                continue;
-            }
+            let grade_penalty = 1.0 + grade.powi(2) * 18.0;
             let step = current_sample
                 .world_position
                 .distance(sample.world_position)
                 * corridor_modifier(history, sample.world_position);
-            let tentative = current_cost + step * sample.travel_cost.max(0.25);
+            let tentative = current_cost + step * sample.travel_cost.max(0.25) * grade_penalty;
             if tentative + 1.0e-9 < g_score[neighbor] {
                 came_from[neighbor] = Some(current.index);
                 g_score[neighbor] = tentative;
@@ -331,6 +347,44 @@ fn simplify_path(_grid: &TerrainGrid, path: &[usize]) -> Vec<usize> {
     let mut detailed_path = path.to_vec();
     detailed_path.dedup();
     detailed_path
+}
+
+fn engineer_route_profile(terrain_path: &[DVec3], maximum_grade: f64) -> Vec<DVec3> {
+    let mut profile = terrain_path.to_vec();
+    if profile.len() < 2 {
+        return profile;
+    }
+
+    for _ in 0..6 {
+        constrain_profile_forward(&mut profile, maximum_grade);
+        for index in (0..profile.len() - 1).rev() {
+            let horizontal = profile[index]
+                .xz()
+                .distance(profile[index + 1].xz())
+                .max(0.01);
+            let maximum_delta = horizontal * maximum_grade;
+            profile[index].y = profile[index].y.clamp(
+                profile[index + 1].y - maximum_delta,
+                profile[index + 1].y + maximum_delta,
+            );
+        }
+    }
+    constrain_profile_forward(&mut profile, maximum_grade);
+    profile
+}
+
+fn constrain_profile_forward(profile: &mut [DVec3], maximum_grade: f64) {
+    for index in 1..profile.len() {
+        let horizontal = profile[index - 1]
+            .xz()
+            .distance(profile[index].xz())
+            .max(0.01);
+        let maximum_delta = horizontal * maximum_grade;
+        profile[index].y = profile[index].y.clamp(
+            profile[index - 1].y - maximum_delta,
+            profile[index - 1].y + maximum_delta,
+        );
+    }
 }
 
 fn route_grammars(path: &[DVec3], port_index: usize) -> Vec<ScrollGrammar> {

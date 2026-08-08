@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from finalize_p4_generation_constraints import main as finalize_generation_constraints
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -242,6 +244,7 @@ def main() -> int:
     finalize_history()
     finalize_visual()
     remove_temporary_lint_allowance()
+    finalize_generation_constraints()
     print("Integrated P4 source finalization completed.")
     return 0
 

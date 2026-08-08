@@ -1,0 +1,107 @@
+name: p4-windows-visual-package
+
+on:
+  push:
+    branches:
+      - agent/p4-deterministic-world-generation
+    paths:
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+      - apps/world_visual/**
+      - crates/world_generation_core/**
+      - crates/p4_world_scenario/**
+      - crates/scroll_camera_core/**
+      - crates/building_core/**
+      - crates/p3_building_scenario/**
+      - docs/visual-acceptance/p4-checklist.md
+      - scripts/collect_p4_machine_info.ps1
+      - .github/workflows/p4-windows-visual-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p4-windows-visual-package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Windows x64 P4 validation package
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout P4 source branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/p4-deterministic-world-generation
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.97.1
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Require committed dependency lockfile
+        shell: pwsh
+        run: |
+          if (-not (Test-Path Cargo.lock)) {
+            throw "Cargo.lock is required before producing a validation package."
+          }
+
+      - name: Build P4 generated-world visual prototype
+        run: cargo build --locked -p world_visual
+
+      - name: Assemble validation package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item target/debug/world_visual.exe dist/world_visual.exe
+          Copy-Item docs/visual-acceptance/p4-checklist.md dist/p4-checklist.md
+          Copy-Item scripts/collect_p4_machine_info.ps1 dist/collect_p4_machine_info.ps1
+          @"
+          # P4 Windows 视觉验证包
+
+          该程序用于验证确定性世界生成、跨地块连续性、远景可达、统一地标、卷轴路线和建筑 LOD。
+          这是技术验证构建，不用于最终性能、美术或内容规模结论。
+
+          Source commit: $env:GITHUB_SHA
+          Workflow run: $env:GITHUB_RUN_ID
+
+          ## 运行
+
+          1. 解压整个压缩包，不要在 ZIP 内直接运行。
+          2. 在解压目录打开 PowerShell。
+          3. 执行：
+
+             powershell -ExecutionPolicy Bypass -File .\collect_p4_machine_info.ps1
+             .\world_visual.exe
+
+          4. 按 p4-checklist.md 完成世界总览、三条路线、地标、港镇、跨界门户和建筑 LOD 检查。
+
+          ## 操作
+
+          - F：总览 / 路线跟随
+          - 1 / 2 / 3：选择路线并回到起点
+          - Space：暂停 / 继续
+          - V：镜头观察侧
+          - L：建筑完整结构 / 外壳 / Massing
+          - H：地块边界
+          - P：跨地块门户
+          - T：路线调试线
+          - A / D 或左右键：总览环绕
+          - 上下键：总览高度
+          - R：重置
+          "@ | Set-Content -Encoding UTF8 dist/RUN.md
+
+      - name: Upload P4 Windows validation package
+        uses: actions/upload-artifact@v4
+        with:
+          name: p4-deterministic-world-windows-x64
+          path: dist
+          if-no-files-found: error
+          retention-days: 30

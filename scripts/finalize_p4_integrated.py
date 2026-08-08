@@ -142,11 +142,33 @@ def finalize_history() -> None:
 def finalize_visual() -> None:
     path = ROOT / "apps/integrated_world_visual/src/main.rs"
     text = path.read_text(encoding="utf-8")
+    text = text.replace(
+        "    LandCover, LandUseKind, LandformClass, TerrainGrid, detailed_height,",
+        "    LandCover, LandUseKind, TerrainGrid, detailed_height,",
+        1,
+    )
+    text = text.replace(
+        "use std::{collections::BTreeMap, f32::consts::PI};",
+        "use std::collections::BTreeMap;",
+        1,
+    )
+    text = text.replace(
+        "use world_ids::{BuildingInstanceId, EntityId};",
+        "use world_ids::EntityId;",
+        1,
+    )
+    text = text.replace(
+        "&& let Some(material) = materials.get_mut(&material_handle.0)",
+        "&& let Some(mut material) = materials.get_mut(&material_handle.0)",
+        1,
+    )
+
     if (
         "visuals: Query<(Entity, &VisualTag)>" in text
         and "mut commands: Commands" in text
         and "commands\n            .entity(entity)" in text
     ):
+        path.write_text(text, encoding="utf-8")
         return
 
     function = '''fn update_visual_visibility(

@@ -76,6 +76,11 @@ jobs:
           cargo run --locked -p p2_reference_frame_trace --
           artifacts/p2-reference-frame-trace.json
 
+      - name: Generate P3 headless building compiler trace
+        run: >-
+          cargo run --locked -p p3_building_trace --
+          artifacts/p3-building-trace.json
+
       - name: Upload dependency lockfile
         if: always()
         uses: actions/upload-artifact@v4
@@ -92,4 +97,5 @@ jobs:
           path: |
             artifacts/p1-camera-trace.json
             artifacts/p2-reference-frame-trace.json
+            artifacts/p3-building-trace.json
           if-no-files-found: error

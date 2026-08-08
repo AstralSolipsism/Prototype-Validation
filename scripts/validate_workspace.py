@@ -37,6 +37,7 @@ def main() -> int:
         "apps/p2_reference_frame_trace",
         "apps/mobile_region_visual",
         "apps/p3_building_trace",
+        "apps/building_visual",
     }
     assert required <= members, required - members
 

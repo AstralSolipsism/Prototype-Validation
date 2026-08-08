@@ -268,7 +268,18 @@ fn find_path(
             if !is_route_passable(sample, Some(bridge)) {
                 continue;
             }
-            let step = grid.samples[current.index]
+            let current_sample = &grid.samples[current.index];
+            let horizontal = current_sample
+                .world_position
+                .xz()
+                .distance(sample.world_position.xz())
+                .max(0.01);
+            let grade =
+                (current_sample.world_position.y - sample.world_position.y).abs() / horizontal;
+            if grade > 0.58 + 1.0e-9 {
+                continue;
+            }
+            let step = current_sample
                 .world_position
                 .distance(sample.world_position)
                 * corridor_modifier(history, sample.world_position);
@@ -316,28 +327,10 @@ fn reconstruct_path(came_from: &[Option<usize>], mut current: usize) -> Vec<usiz
     path
 }
 
-fn simplify_path(grid: &TerrainGrid, path: &[usize]) -> Vec<usize> {
-    if path.len() <= 3 {
-        return path.to_vec();
-    }
-    let mut simplified = vec![path[0]];
-    let mut last_direction = None;
-    for index in 1..path.len() - 1 {
-        let previous = grid.samples[path[index - 1]].world_position.xz();
-        let current = grid.samples[path[index]].world_position.xz();
-        let next = grid.samples[path[index + 1]].world_position.xz();
-        let direction = (next - current).normalize_or_zero();
-        let turn = last_direction
-            .map(|last: DVec2| last.dot(direction).clamp(-1.0, 1.0).acos())
-            .unwrap_or(0.0);
-        if index % 3 == 0 || turn > 0.20 || (current - previous).length() > grid.spacing_m * 1.8 {
-            simplified.push(path[index]);
-            last_direction = Some(direction);
-        }
-    }
-    simplified.push(*path.last().expect("path has last point"));
-    simplified.dedup();
-    simplified
+fn simplify_path(_grid: &TerrainGrid, path: &[usize]) -> Vec<usize> {
+    let mut detailed_path = path.to_vec();
+    detailed_path.dedup();
+    detailed_path
 }
 
 fn route_grammars(path: &[DVec3], port_index: usize) -> Vec<ScrollGrammar> {
@@ -541,24 +534,30 @@ pub fn validate_traversal(
                     <= detailed.terrain.spacing_m * 1.5
         })
     });
-    let grades_valid = traversal
+    let route_grades = traversal
         .routes
         .iter()
-        .all(|route| route.maximum_grade <= 0.58 + 1.0e-9);
+        .map(|route| route.maximum_grade)
+        .collect::<Vec<_>>();
+    let grades_valid = route_grades.iter().all(|grade| *grade <= 0.58 + 1.0e-9);
     let target_identity = traversal.target_landmark_id == atlas.landmark_id
         && traversal
             .routes
             .iter()
             .all(|route| route.target_landmark_id == atlas.landmark_id);
-    let multiple_cells = traversal.routes.iter().all(|route| {
-        route
-            .crossed_cells
-            .iter()
-            .copied()
-            .collect::<BTreeSet<_>>()
-            .len()
-            >= 3
-    });
+    let route_cell_counts = traversal
+        .routes
+        .iter()
+        .map(|route| {
+            route
+                .crossed_cells
+                .iter()
+                .copied()
+                .collect::<BTreeSet<_>>()
+                .len()
+        })
+        .collect::<Vec<_>>();
+    let multiple_cells = route_cell_counts.iter().all(|count| *count >= 3);
     let route_density = traversal
         .routes
         .iter()
@@ -600,7 +599,7 @@ pub fn validate_traversal(
         ValidationCheck {
             name: "route-grade-budget".into(),
             passed: grades_valid,
-            detail: "all route segments remain below the prototype maximum grade".into(),
+            detail: format!("route maximum grades are {route_grades:?}; budget is 0.58"),
         },
         ValidationCheck {
             name: "route-target-identity".into(),
@@ -610,7 +609,7 @@ pub fn validate_traversal(
         ValidationCheck {
             name: "routes-cross-multiple-cells".into(),
             passed: multiple_cells,
-            detail: "each route crosses at least three materialized Atlas cells".into(),
+            detail: format!("route unique materialized-cell counts are {route_cell_counts:?}"),
         },
         ValidationCheck {
             name: "routes-are-denser-than-atlas-centers".into(),

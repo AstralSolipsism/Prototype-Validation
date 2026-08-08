@@ -183,7 +183,7 @@ fn validate_detailed_against_atlas(
     ]
     .into_iter()
     .all(|landform| landforms.contains(&landform));
-    let river_is_low = detailed
+    let river_height_offsets = detailed
         .terrain
         .samples
         .iter()
@@ -195,10 +195,15 @@ fn validate_detailed_against_atlas(
                 )
                 && sample.flow_accumulation > 0.55
         })
-        .all(|sample| {
-            neighborhood_minimum(&detailed.terrain, sample.grid_x, sample.grid_z)
-                >= sample.world_position.y - 4.0
-        });
+        .map(|sample| {
+            sample.world_position.y
+                - neighborhood_minimum(&detailed.terrain, sample.grid_x, sample.grid_z)
+        })
+        .collect::<Vec<_>>();
+    let worst_river_height_offset = river_height_offsets.iter().copied().fold(0.0_f64, f64::max);
+    let river_is_low = river_height_offsets
+        .iter()
+        .all(|offset| *offset <= 4.0 + 1.0e-9);
 
     vec![
         ValidationCheck {
@@ -226,8 +231,11 @@ fn validate_detailed_against_atlas(
         ValidationCheck {
             name: "river-follows-local-low-ground".into(),
             passed: river_is_low,
-            detail: "high-accumulation valley and estuary samples remain near local terrain minima"
-                .into(),
+            detail: format!(
+                "{} high-flow river samples; worst local-height offset is {:.3} m",
+                river_height_offsets.len(),
+                worst_river_height_offset
+            ),
         },
     ]
 }

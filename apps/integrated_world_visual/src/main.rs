@@ -918,6 +918,8 @@ fn update_selection_marker(
 // Bevy injects these resources and queries as independent system parameters.
 #[allow(clippy::too_many_arguments)]
 // Bevy injects these resources and queries as independent system parameters.
+#[allow(clippy::too_many_arguments)]
+// Bevy injects these resources and queries as independent system parameters.
 fn update_camera_and_route_subject(
     time: Res<Time>,
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -1368,6 +1370,8 @@ fn spawn_flat_hex_outline(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+// A segment is one rendering primitive with explicit geometry, material and visibility data.
 #[allow(clippy::too_many_arguments)]
 // A segment is one rendering primitive with explicit geometry, material and visibility data.
 #[allow(clippy::too_many_arguments)]

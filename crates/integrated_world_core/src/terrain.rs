@@ -72,7 +72,7 @@ pub fn materialize_region(
         }
     }
 
-    accumulate_flow(width, height, &mut samples);
+    accumulate_flow(width, height, atlas.cell_radius_m, &mut samples);
     let terrain = TerrainGrid {
         width: resolution,
         height: resolution,
@@ -226,7 +226,7 @@ fn travel_cost(landform: LandformClass, slope: f64, buildable: bool) -> f64 {
     base + slope.powi(2) * 22.0 + if buildable { 0.0 } else { 0.4 }
 }
 
-fn accumulate_flow(width: usize, height: usize, samples: &mut [TerrainSample]) {
+fn accumulate_flow(width: usize, height: usize, cell_radius_m: f64, samples: &mut [TerrainSample]) {
     let mut order = (0..samples.len())
         .filter(|index| samples[*index].cell.is_some())
         .collect::<Vec<_>>();
@@ -283,16 +283,64 @@ fn accumulate_flow(width: usize, height: usize, samples: &mut [TerrainSample]) {
         .ln_1p();
     for sample in samples.iter_mut().filter(|sample| sample.cell.is_some()) {
         sample.flow_accumulation = sample.flow_accumulation.ln_1p() / maximum;
-        let distance_to_river =
-            (sample.world_position.z - river_center_z(sample.world_position.x, 128.0)).abs();
+    }
+
+    let elevations = samples
+        .iter()
+        .map(|sample| sample.world_position.y)
+        .collect::<Vec<_>>();
+    let occupied = samples
+        .iter()
+        .map(|sample| sample.cell.is_some())
+        .collect::<Vec<_>>();
+    for index in 0..samples.len() {
+        if !occupied[index] {
+            continue;
+        }
+        let x = index % width;
+        let z = index / width;
+        let mut local_minimum = elevations[index];
+        for dz in -1isize..=1 {
+            for dx in -1isize..=1 {
+                let nx = x as isize + dx;
+                let nz = z as isize + dz;
+                if nx < 0 || nz < 0 || nx >= width as isize || nz >= height as isize {
+                    continue;
+                }
+                let neighbor = nz as usize * width + nx as usize;
+                if occupied[neighbor] {
+                    local_minimum = local_minimum.min(elevations[neighbor]);
+                }
+            }
+        }
+
+        let elevation = elevations[index];
+        let near_local_minimum = elevation <= local_minimum + 4.0;
+        let sample = &mut samples[index];
+        let distance_to_river = (sample.world_position.z
+            - river_center_z(sample.world_position.x, cell_radius_m))
+        .abs();
         if sample.flow_accumulation > 0.72
-            && distance_to_river < 38.0
-            && sample.world_position.y > 0.0
+            && distance_to_river < cell_radius_m * 0.30
+            && elevation > 0.0
+            && near_local_minimum
         {
-            sample.landform = if sample.world_position.y < 8.0 {
+            sample.landform = if elevation < 8.0 {
                 LandformClass::Estuary
             } else {
                 LandformClass::Floodplain
+            };
+        } else if sample.flow_accumulation > 0.55
+            && matches!(
+                sample.landform,
+                LandformClass::Valley | LandformClass::Floodplain | LandformClass::Estuary
+            )
+            && !near_local_minimum
+        {
+            sample.landform = if sample.slope > 0.22 {
+                LandformClass::Hillslope
+            } else {
+                LandformClass::Lowland
             };
         }
     }

@@ -82,6 +82,11 @@ jobs:
           cargo run --locked -p p3_building_trace --
           artifacts/p3-building-trace.json
 
+      - name: Generate P4 deterministic world trace
+        run: >-
+          cargo run --locked -p p4_world_trace --
+          artifacts/p4-world-trace.json
+
       - name: Upload dependency lockfile
         if: always()
         uses: actions/upload-artifact@v4
@@ -99,4 +104,5 @@ jobs:
             artifacts/p1-camera-trace.json
             artifacts/p2-reference-frame-trace.json
             artifacts/p3-building-trace.json
+            artifacts/p4-world-trace.json
           if-no-files-found: error

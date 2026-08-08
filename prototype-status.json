@@ -155,7 +155,12 @@
       ],
       "known_scope_correction": "The P4A visual is a low-sample continuous 3D projection, not the intended layered Atlas-to-cell-to-scene-to-scroll generation architecture."
     },
-    {"id":"P5","status":"blocked-by-p4b-through-p4f","passed":false},
+    {
+      "id": "P5",
+      "status": "not-started",
+      "passed": false,
+      "blocked_by": ["P4B", "P4C", "P4D", "P4E", "P4F"]
+    },
     {"id":"P6","status":"not-started","passed":false},
     {"id":"P7","status":"not-started","passed":false},
     {"id":"P8","status":"not-started","passed":false}

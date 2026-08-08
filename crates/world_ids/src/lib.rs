@@ -98,6 +98,13 @@ stable_id!(RegionId);
 stable_id!(FrameId);
 stable_id!(CommandId);
 stable_id!(EventId);
+stable_id!(BuildingLevelId);
+stable_id!(RoomId);
+stable_id!(WallId);
+stable_id!(OpeningId);
+stable_id!(StairId);
+stable_id!(RoofRegionId);
+stable_id!(ArchitectureStyleId);
 
 #[cfg(test)]
 mod tests {
@@ -118,6 +125,15 @@ mod tests {
         assert_eq!(encoded, "\"ffffffffffffffffffffffffffffffff\"");
         let decoded: BuildingId = serde_json::from_str(&encoded).expect("deserialize id");
         assert_eq!(decoded, id);
+    }
+
+    #[test]
+    fn building_element_ids_share_the_same_wire_contract() {
+        let room = RoomId::from_u128(42);
+        let wall = WallId::from_u128(43);
+        assert_eq!(room.to_string().len(), 32);
+        assert_eq!(wall.to_string().len(), 32);
+        assert_eq!(serde_json::to_string(&room).expect("room"), format!("\"{room}\""));
     }
 
     #[test]

@@ -171,7 +171,7 @@ pub fn add_north_display_window_delta() -> BlueprintDelta {
         id: OpeningId::from_u128(3_010),
         wall_id: WallId::from_u128(1_004),
         kind: OpeningKind::Window,
-        offset_m: 1.0,
+        offset_m: 4.0,
         width_m: 2.0,
         sill_m: 0.9,
         height_m: 1.4,

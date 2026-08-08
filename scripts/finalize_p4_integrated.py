@@ -141,6 +141,31 @@ def finalize_history() -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def canonicalize_local_clippy_allowance(
+    text: str,
+    function_name: str,
+    explanation: str,
+) -> str:
+    canonical = (
+        "#[allow(clippy::too_many_arguments)]\n"
+        f"// {explanation}\n"
+    )
+    text = re.sub(
+        rf"(?:#\[allow\(clippy::too_many_arguments\)\]\n(?://[^\n]*\n)?)+(?=fn {function_name}\()",
+        canonical,
+        text,
+        count=1,
+    )
+    marker = canonical + f"fn {function_name}("
+    if marker not in text:
+        text = text.replace(
+            f"\nfn {function_name}(",
+            "\n" + marker,
+            1,
+        )
+    return text
+
+
 def finalize_visual() -> None:
     path = ROOT / "apps/integrated_world_visual/src/main.rs"
     text = path.read_text(encoding="utf-8")
@@ -164,19 +189,15 @@ def finalize_visual() -> None:
         "&& let Some(mut material) = materials.get_mut(&material_handle.0)",
         1,
     )
-    text = text.replace(
-        "\nfn update_camera_and_route_subject(",
-        "\n#[allow(clippy::too_many_arguments)]\n"
-        "// Bevy injects these resources and queries as independent system parameters.\n"
-        "fn update_camera_and_route_subject(",
-        1,
+    text = canonicalize_local_clippy_allowance(
+        text,
+        "update_camera_and_route_subject",
+        "Bevy injects these resources and queries as independent system parameters.",
     )
-    text = text.replace(
-        "\nfn spawn_segment(",
-        "\n#[allow(clippy::too_many_arguments)]\n"
-        "// A segment is one rendering primitive with explicit geometry, material and visibility data.\n"
-        "fn spawn_segment(",
-        1,
+    text = canonicalize_local_clippy_allowance(
+        text,
+        "spawn_segment",
+        "A segment is one rendering primitive with explicit geometry, material and visibility data.",
     )
 
     if (

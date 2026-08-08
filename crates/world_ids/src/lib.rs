@@ -133,7 +133,10 @@ mod tests {
         let wall = WallId::from_u128(43);
         assert_eq!(room.to_string().len(), 32);
         assert_eq!(wall.to_string().len(), 32);
-        assert_eq!(serde_json::to_string(&room).expect("room"), format!("\"{room}\""));
+        assert_eq!(
+            serde_json::to_string(&room).expect("room"),
+            format!("\"{room}\"")
+        );
     }
 
     #[test]

@@ -83,7 +83,9 @@ pub fn compile_blueprint(
         )));
     }
 
-    let portal_graph = PortalGraph { edges: portal_edges };
+    let portal_graph = PortalGraph {
+        edges: portal_edges,
+    };
     let collision = compile_collision(blueprint, &index);
     let navigation = compile_navigation(blueprint, &index);
     let massing = compile_massing(blueprint, &index)?;
@@ -158,12 +160,7 @@ fn compile_collision(
             cursor = cursor.max(end);
         }
         if wall.length_m() - cursor > BUILDING_EPSILON {
-            spans.push(wall_span(
-                wall,
-                level.elevation_m,
-                cursor,
-                wall.length_m(),
-            ));
+            spans.push(wall_span(wall, level.elevation_m, cursor, wall.length_m()));
         }
     }
 
@@ -250,7 +247,11 @@ fn compile_massing(
             );
             current = Some(current.map_or(bounds, |existing| existing.union(bounds)));
         }
-        for wall in blueprint.walls.iter().filter(|wall| wall.level_id == level.id) {
+        for wall in blueprint
+            .walls
+            .iter()
+            .filter(|wall| wall.level_id == level.id)
+        {
             let bounds = wall_bounds(wall, level.elevation_m);
             current = Some(current.map_or(bounds, |existing| existing.union(bounds)));
         }
@@ -364,11 +365,8 @@ fn compile_mesh_chunks(
 
     for level in &blueprint.levels {
         for room in &level.rooms {
-            let bounds = Aabb3::from_rect(
-                room.footprint,
-                level.elevation_m - 0.2,
-                level.elevation_m,
-            );
+            let bounds =
+                Aabb3::from_rect(room.footprint, level.elevation_m - 0.2, level.elevation_m);
             insert_chunk(
                 &mut chunks,
                 chunk_key(level.index, bounds.center(), ChunkLayer::Floor),
@@ -407,8 +405,18 @@ fn compile_mesh_chunks(
             point.y,
         );
         let bounds = Aabb3::new(
-            center - DVec3::new(opening.width_m * 0.5, opening.height_m * 0.5, wall.thickness_m),
-            center + DVec3::new(opening.width_m * 0.5, opening.height_m * 0.5, wall.thickness_m),
+            center
+                - DVec3::new(
+                    opening.width_m * 0.5,
+                    opening.height_m * 0.5,
+                    wall.thickness_m,
+                ),
+            center
+                + DVec3::new(
+                    opening.width_m * 0.5,
+                    opening.height_m * 0.5,
+                    wall.thickness_m,
+                ),
         );
         insert_chunk(
             &mut chunks,
@@ -430,8 +438,8 @@ fn compile_mesh_chunks(
         let level = index.levels[&stair.from_level];
         let to_level = index.levels[&stair.to_level];
         let bottom = level.elevation_m.min(to_level.elevation_m);
-        let top = (level.elevation_m + level.height_m)
-            .max(to_level.elevation_m + to_level.height_m);
+        let top =
+            (level.elevation_m + level.height_m).max(to_level.elevation_m + to_level.height_m);
         let bounds = Aabb3::from_rect(stair.footprint, bottom, top);
         insert_chunk(
             &mut chunks,
@@ -650,8 +658,7 @@ mod tests {
     use crate::validate::BuildingError;
     use glam::DVec2;
     use world_ids::{
-        ArchitectureStyleId, BuildingId, BuildingLevelId, OpeningId, RoofRegionId, RoomId,
-        WallId,
+        ArchitectureStyleId, BuildingId, BuildingLevelId, OpeningId, RoofRegionId, RoomId, WallId,
     };
 
     fn blueprint() -> BuildingBlueprint {
@@ -717,7 +724,9 @@ mod tests {
         reordered.openings.reverse();
         reordered.roof_regions.reverse();
         assert_eq!(
-            compile_blueprint(&original).expect("original").semantic_fingerprint,
+            compile_blueprint(&original)
+                .expect("original")
+                .semantic_fingerprint,
             compile_blueprint(&reordered)
                 .expect("reordered")
                 .semantic_fingerprint

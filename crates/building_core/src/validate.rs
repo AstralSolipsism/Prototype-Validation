@@ -94,7 +94,11 @@ impl ValidationReport {
 
 impl fmt::Display for ValidationReport {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(formatter, "building validation failed with {} error(s):", self.errors.len())?;
+        writeln!(
+            formatter,
+            "building validation failed with {} error(s):",
+            self.errors.len()
+        )?;
         for error in &self.errors {
             writeln!(formatter, "- {error}")?;
         }
@@ -234,7 +238,10 @@ pub fn validate_blueprint(blueprint: &BuildingBlueprint) -> Result<(), Validatio
             errors.push(BuildingError::OpeningUnknownWall(opening.id));
             continue;
         };
-        openings_by_wall.entry(opening.wall_id).or_default().push(opening);
+        openings_by_wall
+            .entry(opening.wall_id)
+            .or_default()
+            .push(opening);
 
         if !opening.offset_m.is_finite()
             || !opening.width_m.is_finite()
@@ -296,8 +303,12 @@ pub fn validate_blueprint(blueprint: &BuildingBlueprint) -> Result<(), Validatio
             index.rooms.get(&stair.from_room),
             index.rooms.get(&stair.to_room),
         );
-        let (Some(from_level), Some(to_level), Some((_, from_room_level)), Some((_, to_room_level))) =
-            endpoints
+        let (
+            Some(from_level),
+            Some(to_level),
+            Some((_, from_room_level)),
+            Some((_, to_room_level)),
+        ) = endpoints
         else {
             errors.push(BuildingError::StairUnknownEndpoint(stair.id));
             continue;

@@ -15,18 +15,8 @@ pub fn two_storey_shop() -> BuildingBlueprint {
     let upper_landing = RoomId::from_u128(202);
     let upper_bedroom = RoomId::from_u128(203);
 
-    let ground_walls = level_walls(
-        1_000,
-        ground,
-        entry_room,
-        shop_room,
-    );
-    let upper_walls = level_walls(
-        2_000,
-        upper,
-        upper_landing,
-        upper_bedroom,
-    );
+    let ground_walls = level_walls(1_000, ground, entry_room, shop_room);
+    let upper_walls = level_walls(2_000, upper, upper_landing, upper_bedroom);
     let mut walls = ground_walls.clone();
     walls.extend(upper_walls.clone());
 
@@ -124,18 +114,12 @@ pub fn two_storey_shop() -> BuildingBlueprint {
                 rooms: vec![
                     Room {
                         id: entry_room,
-                        footprint: Rect2::new(
-                            DVec2::new(-6.0, -4.0),
-                            DVec2::new(0.0, 4.0),
-                        ),
+                        footprint: Rect2::new(DVec2::new(-6.0, -4.0), DVec2::new(0.0, 4.0)),
                         purpose: RoomPurpose::Entry,
                     },
                     Room {
                         id: shop_room,
-                        footprint: Rect2::new(
-                            DVec2::new(0.0, -4.0),
-                            DVec2::new(6.0, 4.0),
-                        ),
+                        footprint: Rect2::new(DVec2::new(0.0, -4.0), DVec2::new(6.0, 4.0)),
                         purpose: RoomPurpose::Retail,
                     },
                 ],
@@ -148,18 +132,12 @@ pub fn two_storey_shop() -> BuildingBlueprint {
                 rooms: vec![
                     Room {
                         id: upper_landing,
-                        footprint: Rect2::new(
-                            DVec2::new(-6.0, -4.0),
-                            DVec2::new(0.0, 4.0),
-                        ),
+                        footprint: Rect2::new(DVec2::new(-6.0, -4.0), DVec2::new(0.0, 4.0)),
                         purpose: RoomPurpose::Circulation,
                     },
                     Room {
                         id: upper_bedroom,
-                        footprint: Rect2::new(
-                            DVec2::new(0.0, -4.0),
-                            DVec2::new(6.0, 4.0),
-                        ),
+                        footprint: Rect2::new(DVec2::new(0.0, -4.0), DVec2::new(6.0, 4.0)),
                         purpose: RoomPurpose::Sleeping,
                     },
                 ],
@@ -332,8 +310,8 @@ mod tests {
     #[test]
     fn display_window_has_local_incremental_impact() {
         let blueprint = two_storey_shop();
-        let dirty = impact_for_delta(&blueprint, &add_north_display_window_delta())
-            .expect("impact plan");
+        let dirty =
+            impact_for_delta(&blueprint, &add_north_display_window_delta()).expect("impact plan");
         assert_eq!(dirty.walls.len(), 1);
         assert_eq!(dirty.levels.len(), 1);
         assert!(dirty.rebuild_exterior_shell);

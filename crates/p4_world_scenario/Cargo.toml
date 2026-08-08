@@ -1,0 +1,12 @@
+[package]
+name = "p4_world_scenario"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+building_core = { path = "../building_core" }
+p3_building_scenario = { path = "../p3_building_scenario" }
+world_generation_core = { path = "../world_generation_core" }
+world_ids = { path = "../world_ids" }

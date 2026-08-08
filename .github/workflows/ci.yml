@@ -56,7 +56,25 @@ jobs:
         run: cargo generate-lockfile
 
       - name: Check workspace including Bevy applications
-        run: cargo check --workspace --all-targets --locked
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          set +e
+          cargo check --workspace --all-targets --locked --message-format=short 2>&1 | tee artifacts/workspace-check.log
+          status=${PIPESTATUS[0]}
+          grep -E '(^|: )(error(\[E[0-9]+\])?:|warning:)' artifacts/workspace-check.log > artifacts/workspace-check-summary.txt || true
+          exit "$status"
+
+      - name: Upload workspace-check diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-check-diagnostics
+          path: |
+            artifacts/workspace-check.log
+            artifacts/workspace-check-summary.txt
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Clippy workspace including Bevy applications
         run: cargo clippy --workspace --all-targets --locked -- -D warnings

@@ -1,26 +1,19 @@
 name: ci
 
 on:
-  push:
-    branches:
-      - agent/p4-deterministic-world-generation
-    paths:
-      - .github/workflows/ci.yml
   pull_request:
-    paths:
-      - .github/workflows/ci.yml
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: p4-integrated-remote-ci-${{ github.ref }}
+  group: p4-integrated-isolated-runner-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   validate:
-    name: integrated P4 remote validation
+    name: integrated P4 isolated validation
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -46,7 +39,7 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
 
-      - name: Apply known source cleanup in worktree
+      - name: Apply source cleanup in validation worktree
         shell: python
         run: |
           from pathlib import Path
@@ -101,7 +94,7 @@ jobs:
           )
           lib.write_text(text, encoding="utf-8")
 
-      - name: Run all integrated gates and retain diagnostics
+      - name: Run all integrated gates
         shell: bash
         run: |
           set -o pipefail
@@ -125,17 +118,15 @@ jobs:
               --all-targets --locked
             echo '## integrated trace'
             cargo run --locked -p p4_integrated_trace -- artifacts/p4-integrated-world-trace.json
-          } 2>&1 | tee artifacts/p4-integrated-remote-ci.log
+          } 2>&1 | tee artifacts/p4-integrated-isolated.log
 
-      - name: Upload integrated diagnostics and trace
+      - name: Upload diagnostics and trace
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: p4-integrated-remote-ci
+          name: p4-integrated-isolated-validation
           path: |
-            artifacts/p4-integrated-remote-ci.log
+            artifacts/p4-integrated-isolated.log
             artifacts/p4-integrated-world-trace.json
           if-no-files-found: warn
           retention-days: 7
-
-# Second revision deliberately triggers the registered workflow.

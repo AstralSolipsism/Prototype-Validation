@@ -8,13 +8,13 @@ use bevy::{
 use glam::Vec3Swizzles;
 use integrated_world_core::{
     AtlasCellSpec, AtlasFeatureKind, CompiledScrollRoute, HistoricalAssetKind, IntegratedWorld,
-    LandCover, LandUseKind, LandformClass, TerrainGrid, detailed_height,
+    LandCover, LandUseKind, TerrainGrid, detailed_height,
 };
 use p4_integrated_scenario::generate_integrated_baseline;
 use scroll_camera_core::{CameraRigConfig, CameraRigState, PolylineRoute, ScrollGrammar, ViewSide};
-use std::{collections::BTreeMap, f32::consts::PI};
+use std::collections::BTreeMap;
 use world_generation_core::HexCoord;
-use world_ids::{BuildingInstanceId, EntityId};
+use world_ids::EntityId;
 
 const ATLAS_SCALE: f32 = 0.58;
 const ATLAS_HEIGHT: f32 = 610.0;
@@ -891,7 +891,7 @@ fn update_atlas_cell_materials(
 ) {
     for (cell_visual, material_handle) in &cells {
         if let Some(cell) = world.0.atlas.cell(cell_visual.coord)
-            && let Some(material) = materials.get_mut(&material_handle.0)
+            && let Some(mut material) = materials.get_mut(&material_handle.0)
         {
             material.base_color = atlas_cell_color(cell, state.atlas_layer, &world.0.atlas.cells);
         }

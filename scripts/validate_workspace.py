@@ -49,8 +49,8 @@ def main() -> int:
     assert stages["P1"]["status"] == "passed-with-non-blocking-engineering-followups"
     assert stages["P2"]["passed"] is True
     assert stages["P2"]["status"] == "passed"
-    assert stages["P3"]["passed"] is False
-    assert stages["P3"]["status"] == "implementation-in-progress"
+    assert stages["P3"]["passed"] is True
+    assert stages["P3"]["status"] == "passed"
     assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(4, 9))
 
     print("Workspace manifest and prototype status passed.")

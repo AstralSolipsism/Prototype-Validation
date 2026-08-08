@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def replace_once(text: str, old: str, new: str, label: str) -> str:
+    if old not in text:
+        if new in text:
+            return text
+        raise RuntimeError(f"{label}: neither original nor finalized form was found")
+    return text.replace(old, new, 1)
+
+
+def replace_pattern_once(text: str, pattern: str, replacement: str, label: str) -> str:
+    updated, count = re.subn(pattern, replacement, text, count=1, flags=re.DOTALL)
+    if count == 1:
+        return updated
+    if replacement in text:
+        return text
+    raise RuntimeError(f"{label}: pattern did not match exactly once")
+
+
+def finalize_atlas() -> None:
+    path = ROOT / "crates/integrated_world_core/src/atlas.rs"
+    text = path.read_text(encoding="utf-8")
+    text = text.replace(
+        "    let settlement_cell = manifest\n"
+        "        .cell(settlement.cell)\n"
+        "        .expect(\"settlement cell exists\");\n",
+        "",
+        1,
+    )
+    old = """        if let Some(cell) = manifest.cells.iter().min_by(|left, right| {
+            left.center_world
+                .xz()
+                .distance_squared(point.xz())
+                .total_cmp(&right.center_world.xz().distance_squared(point.xz()))
+        }) {
+            if cell.center_world.xz().distance(point.xz()) <= manifest.cell_radius_m * 1.35 {
+                touched.insert(cell.coord);
+            }
+        }
+"""
+    new = """        if let Some(cell) = manifest.cells.iter().min_by(|left, right| {
+            left.center_world
+                .xz()
+                .distance_squared(point.xz())
+                .total_cmp(&right.center_world.xz().distance_squared(point.xz()))
+        }) && cell.center_world.xz().distance(point.xz()) <= manifest.cell_radius_m * 1.35
+        {
+            touched.insert(cell.coord);
+        }
+"""
+    text = replace_once(text, old, new, "Atlas touched-cell selection")
+    path.write_text(text, encoding="utf-8")
+
+
+def finalize_traversal() -> None:
+    path = ROOT / "crates/integrated_world_core/src/traversal.rs"
+    text = path.read_text(encoding="utf-8")
+    text = replace_once(
+        text,
+        "fn nearest_sample<'a>(grid: &'a TerrainGrid, point: DVec2) -> &'a TerrainSample {",
+        "fn nearest_sample(grid: &TerrainGrid, point: DVec2) -> &TerrainSample {",
+        "Traversal lifetime elision",
+    )
+    path.write_text(text, encoding="utf-8")
+
+
+def finalize_history() -> None:
+    path = ROOT / "crates/integrated_world_core/src/history.rs"
+    text = path.read_text(encoding="utf-8")
+    text = text.replace(
+        "use std::collections::BTreeSet;",
+        "use std::collections::{BTreeMap, BTreeSet};",
+        1,
+    )
+    function = '''pub fn apply_history_to_atlas(
+    atlas: &mut WorldAtlasManifest,
+    history: &HistoryLedger,
+) -> Result<(), serde_json::Error> {
+    let cell_radius_m = atlas.cell_radius_m;
+    let event_cells = history
+        .events
+        .iter()
+        .map(|event| {
+            let point = event.location.xz();
+            let coord = atlas
+                .cells
+                .iter()
+                .find(|cell| cell_at_position(cell.coord, cell_radius_m, point))
+                .or_else(|| {
+                    atlas.cells.iter().min_by(|left, right| {
+                        left.center_world
+                            .xz()
+                            .distance_squared(point)
+                            .total_cmp(&right.center_world.xz().distance_squared(point))
+                    })
+                })
+                .map(|cell| cell.coord)
+                .expect("Atlas contains cells");
+            (event.id, coord)
+        })
+        .collect::<BTreeMap<_, _>>();
+
+    for cell in &mut atlas.cells {
+        let event_ids = history
+            .events
+            .iter()
+            .filter(|event| event_cells.get(&event.id).copied() == Some(cell.coord))
+            .map(|event| event.id)
+            .collect::<Vec<_>>();
+        let zones = history
+            .land_use
+            .iter()
+            .filter(|zone| zone.source_cell == cell.coord)
+            .collect::<Vec<_>>();
+        if !event_ids.is_empty() || !zones.is_empty() {
+            cell.history = AtlasHistorySummary {
+                first_settlement_year: history
+                    .events
+                    .iter()
+                    .filter(|event| event_ids.contains(&event.id))
+                    .map(|event| event.year)
+                    .min(),
+                current_population: (cell.carrying_capacity * 4_500.0).round().max(80.0) as u32,
+                dominant_economy: dominant_economy(zones.as_slice()),
+                event_ids,
+            };
+        }
+    }
+    atlas.atlas_fingerprint = 0;
+    atlas.atlas_fingerprint = digest(atlas)?;
+    Ok(())
+}'''
+    text = replace_pattern_once(
+        text,
+        r"pub fn apply_history_to_atlas\(.*?\n}\n(?=\nfn dominant_economy)",
+        function,
+        "Atlas history projection",
+    )
+    path.write_text(text, encoding="utf-8")
+
+
+def finalize_visual() -> None:
+    path = ROOT / "apps/integrated_world_visual/src/main.rs"
+    text = path.read_text(encoding="utf-8")
+    function = '''fn update_visual_visibility(
+    state: Res<VisualState>,
+    visuals: Query<(Entity, &VisualTag)>,
+    mut commands: Commands,
+) {
+    for (entity, tag) in &visuals {
+        let space_visible = match tag.space {
+            VisualSpace::Atlas => state.mode == AppMode::Atlas,
+            VisualSpace::Local => state.mode != AppMode::Atlas,
+        };
+        let kind_visible = match tag.kind {
+            VisualKind::Always => true,
+            VisualKind::AtlasBoundary => state.show_atlas_boundaries,
+            VisualKind::AtlasContour => state.show_contours,
+            VisualKind::AtlasHistory | VisualKind::LocalHistory => state.show_history,
+            VisualKind::LocalRoute => state.show_routes,
+            VisualKind::RouteSubject => state.mode == AppMode::RouteTravel,
+            VisualKind::BuildingFull => state.building_lod == BuildingLod::Full,
+            VisualKind::BuildingShell => state.building_lod == BuildingLod::Shell,
+            VisualKind::BuildingMassing => state.building_lod == BuildingLod::Massing,
+        };
+        commands.entity(entity).insert(if space_visible && kind_visible {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        });
+    }
+}'''
+    text = replace_pattern_once(
+        text,
+        r"fn update_visual_visibility\(.*?\n}\n(?=\nfn update_atlas_cell_materials)",
+        function,
+        "Bevy visibility system",
+    )
+    path.write_text(text, encoding="utf-8")
+
+
+def remove_temporary_lint_allowance() -> None:
+    path = ROOT / "crates/integrated_world_core/src/lib.rs"
+    text = path.read_text(encoding="utf-8")
+    text = text.replace(
+        "#![allow(unused_variables, clippy::collapsible_if, clippy::needless_lifetimes)]\n",
+        "",
+        1,
+    )
+    path.write_text(text, encoding="utf-8")
+
+
+def main() -> int:
+    finalize_atlas()
+    finalize_traversal()
+    finalize_history()
+    finalize_visual()
+    remove_temporary_lint_allowance()
+    print("Integrated P4 source finalization completed.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,75 @@
+name: p4-source-cleanup
+
+on:
+  push:
+    branches:
+      - agent/p4-deterministic-world-generation
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p4-source-cleanup-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cleanup:
+    name: apply P4 compile-safe cleanup and rustfmt
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout P4 source branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/p4-deterministic-world-generation
+
+      - name: Apply exact source cleanup
+        shell: python
+        run: |
+          from pathlib import Path
+
+          generate = Path("crates/world_generation_core/src/generate.rs")
+          text = generate.read_text(encoding="utf-8")
+          for line in (
+              "const STAGE_HYDROLOGY: u64 = 0x1003;\n",
+              "const STAGE_TRANSPORT: u64 = 0x1004;\n",
+              "const STAGE_SETTLEMENT: u64 = 0x1005;\n",
+              "const STAGE_ROUTE: u64 = 0x1006;\n",
+          ):
+              text = text.replace(line, "")
+          generate.write_text(text, encoding="utf-8")
+
+          validate = Path("crates/world_generation_core/src/validate.rs")
+          text = validate.read_text(encoding="utf-8")
+          text = text.replace(
+              "    let expected_cells = 1 + 3 * usize::from(manifest.radius as u16) * usize::from((manifest.radius + 1) as u16);\n",
+              "    let radius = usize::try_from(manifest.radius).unwrap_or(0);\n    let expected_cells = 1 + 3 * radius * (radius + 1);\n",
+          )
+          text = text.replace(
+              "    let mut grammars = BTreeSet::new();\n",
+              "    let mut grammars = Vec::new();\n",
+          )
+          validate.write_text(text, encoding="utf-8")
+
+      - name: Install Rustfmt
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.97.1
+          components: rustfmt
+
+      - name: Apply rustfmt
+        run: cargo fmt --all
+
+      - name: Commit cleanup when changed
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- '*.rs'
+          if git diff --cached --quiet; then
+            echo "P4 sources are already clean and formatted."
+            exit 0
+          fi
+          git commit -m "Format and clean P4 world generation sources"
+          git push origin HEAD:agent/p4-deterministic-world-generation

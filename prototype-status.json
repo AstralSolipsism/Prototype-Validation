@@ -70,13 +70,15 @@
         "derived room, portal, collision, navigation, chunk, cutaway and massing compilation authored",
         "incremental dirty-set planning authored",
         "deterministic two-storey building scenario authored",
-        "headless building trace authored"
+        "headless building trace authored",
+        "Bevy static and moving building visual prototype authored",
+        "full, exterior-shell, massing, cutaway and localized-window modes authored",
+        "Windows GPU validation workflow and checklist authored"
       ],
       "evidence_missing": [
         "P3 Rust CI",
         "P3 headless building report",
-        "Bevy building visual prototype",
-        "Windows GPU validation package",
+        "Windows GPU validation package artifact",
         "P3 manual GPU validation"
       ]
     },

@@ -18,7 +18,7 @@ jobs:
   validate:
     name: architecture, rust, headless prototype
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
@@ -83,10 +83,15 @@ jobs:
           cargo run --locked -p p3_building_trace --
           artifacts/p3-building-trace.json
 
-      - name: Generate P4 deterministic world trace
+      - name: Generate P4A deterministic world trace
         run: >-
           cargo run --locked -p p4_world_trace --
           artifacts/p4-world-trace.json
+
+      - name: Generate integrated P4 Atlas-to-scroll trace
+        run: >-
+          cargo run --locked -p p4_integrated_trace --
+          artifacts/p4-integrated-world-trace.json
 
       - name: Upload dependency lockfile
         if: always()
@@ -106,4 +111,5 @@ jobs:
             artifacts/p2-reference-frame-trace.json
             artifacts/p3-building-trace.json
             artifacts/p4-world-trace.json
+            artifacts/p4-integrated-world-trace.json
           if-no-files-found: error

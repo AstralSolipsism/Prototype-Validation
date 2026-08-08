@@ -19,12 +19,13 @@ env:
   INTEGRATED_BRANCH: agent/p4-integrated-world-pipeline
 
 jobs:
-  finalize:
-    name: persist deterministic integrated P4 source fixes
+  validate:
+    name: architecture, Rust, deterministic evidence and Bevy build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
     outputs:
       source_sha: ${{ steps.source.outputs.sha }}
+      gate_status: ${{ steps.gate.outputs.status }}
 
     steps:
       - name: Checkout integrated branch with history
@@ -33,11 +34,43 @@ jobs:
           ref: ${{ env.INTEGRATED_BRANCH }}
           fetch-depth: 0
 
-      - name: Install Rustfmt
+      - name: Record workflow identity before long-running gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p docs/evidence
+          {
+            echo '# P4 integrated final automated gate'
+            echo
+            echo 'Result: **IN_PROGRESS**'
+            echo
+            echo "Workflow run: ${GITHUB_RUN_ID}"
+            echo "Starting source: $(git rev-parse HEAD)"
+            echo "Branch: ${INTEGRATED_BRANCH}"
+          } > docs/evidence/p4-integrated-final-gate.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/evidence/p4-integrated-final-gate.md
+          if ! git diff --cached --quiet; then
+            git commit -m "Record integrated P4 final gate start"
+            git push origin "HEAD:${INTEGRATED_BRANCH}"
+          fi
+
+      - name: Install Bevy Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            g++ pkg-config libx11-dev libasound2-dev libudev-dev \
+            libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
+
+      - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.97.1
-          components: rustfmt
+          components: rustfmt, clippy
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
 
       - name: Apply deterministic source finalizer
         run: python scripts/finalize_p4_integrated.py
@@ -49,70 +82,21 @@ jobs:
             .github/workflows/p4-integrated-clippy-fix.yml \
             .github/workflows/p4-integrated-core-diagnostic.yml
 
-      - name: Format and resolve dependency lockfile
-        run: |
-          cargo fmt --all
-          cargo generate-lockfile
-
-      - name: Commit finalized source when changed
+      - name: Format, resolve lockfile and persist source changes
         id: source
         shell: bash
         run: |
           set -euo pipefail
+          cargo fmt --all
+          cargo generate-lockfile
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if ! git diff --cached --quiet; then
             git commit -m "Finalize integrated P4 automated gate fixes"
-            for attempt in 1 2 3 4; do
-              if git push origin "HEAD:${INTEGRATED_BRANCH}"; then
-                break
-              fi
-              if [ "$attempt" -eq 4 ]; then
-                exit 1
-              fi
-              git fetch origin "${INTEGRATED_BRANCH}"
-              git rebase "origin/${INTEGRATED_BRANCH}"
-            done
+            git push origin "HEAD:${INTEGRATED_BRANCH}"
           fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-  validate:
-    name: architecture, Rust, deterministic evidence and Bevy build
-    needs: finalize
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    outputs:
-      gate_status: ${{ steps.gate.outputs.status }}
-
-    steps:
-      - name: Checkout finalized integrated branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.INTEGRATED_BRANCH }}
-          fetch-depth: 0
-
-      - name: Install Bevy Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends \
-            g++ \
-            pkg-config \
-            libx11-dev \
-            libasound2-dev \
-            libudev-dev \
-            libxkbcommon-x11-0 \
-            libwayland-dev \
-            libxkbcommon-dev
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.97.1
-          components: rustfmt, clippy
-
-      - name: Cache Cargo
-        uses: Swatinem/rust-cache@v2
 
       - name: Run complete automated gate and retain diagnostics
         id: gate
@@ -155,20 +139,14 @@ jobs:
           ) 2>&1 | tee artifacts/p4-integrated-final-gate.log
           status=${PIPESTATUS[0]}
           echo "status=${status}" >> "$GITHUB_OUTPUT"
-
-          if [ "$status" -eq 0 ]; then
-            result=PASS
-          else
-            result=FAIL
-          fi
-
+          if [ "$status" -eq 0 ]; then result=PASS; else result=FAIL; fi
           {
             echo '# P4 integrated final automated gate'
             echo
             echo "Result: **${result}**"
             echo
             echo "Workflow run: ${GITHUB_RUN_ID}"
-            echo "Validated source: ${{ needs.finalize.outputs.source_sha }}"
+            echo "Validated source: ${{ steps.source.outputs.sha }}"
             echo "Branch: ${INTEGRATED_BRANCH}"
             echo
             if [ "$status" -eq 0 ]; then
@@ -216,7 +194,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-      - name: Persist gate result on the integrated branch
+      - name: Persist final gate result
         if: always()
         shell: bash
         run: |
@@ -224,20 +202,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/evidence/p4-integrated-final-gate.md
-          if git diff --cached --quiet; then
-            exit 0
+          if ! git diff --cached --quiet; then
+            git commit -m "Record integrated P4 final gate result"
+            git push origin "HEAD:${INTEGRATED_BRANCH}"
           fi
-          git commit -m "Record integrated P4 final gate result"
-          for attempt in 1 2 3 4; do
-            if git push origin "HEAD:${INTEGRATED_BRANCH}"; then
-              break
-            fi
-            if [ "$attempt" -eq 4 ]; then
-              exit 1
-            fi
-            git fetch origin "${INTEGRATED_BRANCH}"
-            git rebase "origin/${INTEGRATED_BRANCH}"
-          done
 
       - name: Fail after diagnostics are persisted
         if: steps.gate.outputs.status != '0'
@@ -245,9 +213,7 @@ jobs:
 
   package:
     name: Windows x64 final manual acceptance package
-    needs:
-      - finalize
-      - validate
+    needs: validate
     if: needs.validate.outputs.gate_status == '0'
     runs-on: windows-latest
     timeout-minutes: 90
@@ -283,16 +249,14 @@ jobs:
           Copy-Item docs/visual-acceptance/p4-integrated-checklist.md dist/p4-integrated-checklist.md
           Copy-Item scripts/collect_p4_integrated_machine_info.ps1 dist/collect_p4_integrated_machine_info.ps1
           $trace = Get-ChildItem evidence -Recurse -Filter p4-integrated-world-trace.json | Select-Object -First 1
-          if ($null -eq $trace) {
-            throw 'Integrated P4 trace was not found in downloaded evidence.'
-          }
+          if ($null -eq $trace) { throw 'Integrated P4 trace was not found in downloaded evidence.' }
           Copy-Item $trace.FullName dist/p4-integrated-world-trace.json
           @"
           # P4 Atlas 到卷轴世界综合人工验收包
 
           本包用于 P4 最终端到端技术验收，不代表正式美术、内容规模或最终性能。
 
-          Validated source: ${{ needs.finalize.outputs.source_sha }}
+          Validated source: ${{ needs.validate.outputs.source_sha }}
           Workflow run: $env:GITHUB_RUN_ID
 
           ## 运行

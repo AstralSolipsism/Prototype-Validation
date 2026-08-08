@@ -45,6 +45,7 @@ def main() -> int:
         "apps/p4_world_trace",
         "apps/world_visual",
         "apps/p4_integrated_trace",
+        "apps/integrated_world_visual",
     }
     assert required <= members, required - members
 

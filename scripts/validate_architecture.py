@@ -21,6 +21,8 @@ ENGINE_AGNOSTIC_CRATES = (
     "p3_building_scenario",
     "world_generation_core",
     "p4_world_scenario",
+    "integrated_world_core",
+    "p4_integrated_scenario",
 )
 FORBIDDEN_TOKENS = (
     "bevy::",
@@ -59,6 +61,7 @@ def main() -> int:
         ROOT / "test-vectors" / "p0-foundation.json",
         ROOT / "docs" / "prototypes" / "p3-semantic-building-compiler.md",
         ROOT / "docs" / "prototypes" / "p4-deterministic-world-generation.md",
+        ROOT / "docs" / "prototypes" / "p4-integrated-atlas-to-scroll-world.md",
     )
     for path in required:
         if not path.exists():

@@ -1,0 +1,31 @@
+name: dev-source-snapshot
+
+on:
+  push:
+    branches:
+      - agent/p4-integrated-world-pipeline
+    paths:
+      - .github/workflows/dev-source-snapshot.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/p4-integrated-world-pipeline
+      - name: Create source archive
+        run: |
+          tar --exclude=.git --exclude=target --exclude=artifacts -czf prototype-validation-source.tar.gz .
+      - name: Upload source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: prototype-validation-source
+          path: prototype-validation-source.tar.gz
+          if-no-files-found: error
+          retention-days: 1

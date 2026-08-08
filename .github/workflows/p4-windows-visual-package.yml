@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: p4-windows-visual-package-${{ github.ref }}
@@ -105,3 +105,22 @@ jobs:
           path: dist
           if-no-files-found: error
           retention-days: 30
+
+      - name: Record successful package build
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path docs/evidence | Out-Null
+          @"
+          # P4 Windows 验证包已生成
+
+          Workflow run: $env:GITHUB_RUN_ID
+          Source commit: $env:GITHUB_SHA
+          Artifact: p4-deterministic-world-windows-x64
+          Build profile: dev (workspace optimized dependencies)
+          Purpose: P4 deterministic generated-world GPU validation only
+          "@ | Set-Content -Encoding UTF8 docs/evidence/p4-package-ready.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/evidence/p4-package-ready.md
+          git commit -m "Record P4 Windows validation package"
+          git push origin HEAD:agent/p4-deterministic-world-generation

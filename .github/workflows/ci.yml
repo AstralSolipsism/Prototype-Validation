@@ -8,81 +8,13 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  integrated-swizzle-fix:
-    name: temporary integrated P4 glam swizzle fix
-    if: >-
-      (github.event_name == 'push' && github.ref == 'refs/heads/agent/p4-integrated-world-pipeline') ||
-      (github.event_name == 'pull_request' && github.head_ref == 'agent/p4-integrated-world-pipeline')
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout integrated branch
-        uses: actions/checkout@v4
-        with:
-          ref: agent/p4-integrated-world-pipeline
-
-      - name: Import Vec3Swizzles in every module using xz()
-        shell: python
-        run: |
-          from pathlib import Path
-
-          paths = [
-              Path("crates/integrated_world_core/src/atlas.rs"),
-              Path("crates/integrated_world_core/src/terrain.rs"),
-              Path("crates/integrated_world_core/src/history.rs"),
-              Path("crates/integrated_world_core/src/traversal.rs"),
-              Path("crates/integrated_world_core/src/validate.rs"),
-          ]
-          for path in paths:
-              text = path.read_text(encoding="utf-8")
-              if ".xz()" not in text or "Vec3Swizzles" in text:
-                  continue
-              if "use glam::{DVec2, DVec3};" in text:
-                  text = text.replace(
-                      "use glam::{DVec2, DVec3};",
-                      "use glam::{DVec2, DVec3, Vec3Swizzles};",
-                      1,
-                  )
-              elif "use glam::{DVec2, DVec3" in text:
-                  raise SystemExit(f"unexpected glam import form in {path}")
-              else:
-                  anchor = next(
-                      (line for line in text.splitlines() if line.startswith("use crate")),
-                      None,
-                  )
-                  if anchor is None:
-                      text = "use glam::Vec3Swizzles;\n" + text
-                  else:
-                      text = text.replace(anchor, "use glam::Vec3Swizzles;\n" + anchor, 1)
-              path.write_text(text, encoding="utf-8")
-
-      - name: Install Rustfmt
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.97.1
-          components: rustfmt
-
-      - name: Format and commit when changed
-        shell: bash
-        run: |
-          cargo fmt --all
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add crates/integrated_world_core/src
-          if git diff --cached --quiet; then
-            echo "Vec3Swizzles imports are already present."
-            exit 0
-          fi
-          git commit -m "Import glam swizzle traits in integrated P4"
-          git push origin HEAD:agent/p4-integrated-world-pipeline
-
   validate:
     name: architecture, rust, headless prototype
     runs-on: ubuntu-latest

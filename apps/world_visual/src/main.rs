@@ -8,9 +8,7 @@ use bevy::{
 use building_core::{BuildingCompilation, compile_blueprint};
 use p3_building_scenario::two_storey_shop;
 use p4_world_scenario::generate_baseline;
-use scroll_camera_core::{
-    CameraRigConfig, CameraRigState, PolylineRoute, ScrollGrammar, ViewSide,
-};
+use scroll_camera_core::{CameraRigConfig, CameraRigState, PolylineRoute, ScrollGrammar, ViewSide};
 use std::f32::consts::PI;
 use world_generation_core::{
     AtlasCellManifest, Biome, BuildingPlacement, HexCoord, HexDirection, PortalKind,
@@ -116,7 +114,6 @@ struct RouteRuntime {
 
 #[derive(Resource)]
 struct WorldVisualState {
-    manifest: WorldManifest,
     routes: Vec<RouteRuntime>,
     selected_route: usize,
     distance_m: f64,
@@ -211,12 +208,7 @@ fn setup(
     spawn_transport(&mut commands, &assets, &manifest);
     spawn_route_overlays(&mut commands, &assets, &manifest);
     spawn_debug_overlays(&mut commands, &assets, &manifest);
-    spawn_settlement(
-        &mut commands,
-        &assets,
-        &manifest,
-        &building_compilation,
-    );
+    spawn_settlement(&mut commands, &assets, &manifest, &building_compilation);
     spawn_landmark(&mut commands, &assets, &manifest);
 
     commands.spawn((
@@ -256,7 +248,6 @@ fn setup(
         .expect("P4 camera config must be valid");
     let overview_target = world_center(&manifest);
     commands.insert_resource(WorldVisualState {
-        manifest,
         routes,
         selected_route: 0,
         distance_m: 0.0,
@@ -368,7 +359,10 @@ fn corner_position(manifest: &WorldManifest, coord: HexCoord, corner: usize) -> 
 }
 
 fn corner_height(manifest: &WorldManifest, coord: HexCoord, corner: usize) -> f64 {
-    let mut total = manifest.cell(coord).expect("corner cell exists").elevation_m;
+    let mut total = manifest
+        .cell(coord)
+        .expect("corner cell exists")
+        .elevation_m;
     let mut count = 1.0;
     for direction in [CORNER_NEIGHBORS[corner].0, CORNER_NEIGHBORS[corner].1] {
         if let Some(neighbor) = manifest.cell(coord.neighbor(direction)) {
@@ -438,11 +432,7 @@ fn spawn_transport(commands: &mut Commands, assets: &VisualAssets, manifest: &Wo
     }
 }
 
-fn spawn_route_overlays(
-    commands: &mut Commands,
-    assets: &VisualAssets,
-    manifest: &WorldManifest,
-) {
+fn spawn_route_overlays(commands: &mut Commands, assets: &VisualAssets, manifest: &WorldManifest) {
     for (route_index, route) in manifest.routes.iter().enumerate() {
         for pair in route.nodes.windows(2) {
             spawn_segment(
@@ -459,11 +449,7 @@ fn spawn_route_overlays(
     }
 }
 
-fn spawn_debug_overlays(
-    commands: &mut Commands,
-    assets: &VisualAssets,
-    manifest: &WorldManifest,
-) {
+fn spawn_debug_overlays(commands: &mut Commands, assets: &VisualAssets, manifest: &WorldManifest) {
     for cell in &manifest.cells {
         for direction in HexDirection::ALL {
             let neighbor = cell.coord.neighbor(direction);
@@ -522,8 +508,7 @@ fn spawn_settlement(
     commands.spawn((
         Mesh3d(assets.cube.clone()),
         MeshMaterial3d(assets.plaza.clone()),
-        Transform::from_translation(root + Vec3::Y * 0.2)
-            .with_scale(Vec3::new(72.0, 0.8, 50.0)),
+        Transform::from_translation(root + Vec3::Y * 0.2).with_scale(Vec3::new(72.0, 0.8, 50.0)),
     ));
 
     for placement in &settlement.buildings {
@@ -768,14 +753,8 @@ fn cell_surface_point(manifest: &WorldManifest, coord: HexCoord, offset_y: f32) 
 
 fn route_runtime(route: &ScrollRouteManifest) -> RouteRuntime {
     RouteRuntime {
-        polyline: PolylineRoute::new(
-            route
-                .nodes
-                .iter()
-                .map(|node| node.world_position)
-                .collect(),
-        )
-        .expect("generated P4 route is a valid polyline"),
+        polyline: PolylineRoute::new(route.nodes.iter().map(|node| node.world_position).collect())
+            .expect("generated P4 route is a valid polyline"),
         grammars: route.nodes.iter().map(|node| node.grammar).collect(),
     }
 }
@@ -910,9 +889,8 @@ fn update_route_subject_and_camera(
 
     let mut subject_transform = subject.single_mut().expect("one P4 route subject");
     subject_transform.translation = frame.position.as_vec3() + Vec3::Y * (SUBJECT_HEIGHT_M * 0.5);
-    subject_transform.rotation = Quat::from_rotation_y(
-        (-(frame.tangent.z as f32)).atan2(frame.tangent.x as f32),
-    );
+    subject_transform.rotation =
+        Quat::from_rotation_y((-(frame.tangent.z as f32)).atan2(frame.tangent.x as f32));
 
     let mut camera_transform = camera.single_mut().expect("one P4 camera");
     match state.camera_mode {
@@ -936,8 +914,8 @@ fn update_route_subject_and_camera(
                     state.overview_height,
                     state.overview_angle.cos() * state.overview_radius,
                 );
-            *camera_transform = Transform::from_translation(position)
-                .looking_at(state.overview_target, Vec3::Y);
+            *camera_transform =
+                Transform::from_translation(position).looking_at(state.overview_target, Vec3::Y);
         }
     }
 }
@@ -977,10 +955,7 @@ fn update_overlay_visibility(
     }
 }
 
-fn update_window_title(
-    state: Res<WorldVisualState>,
-    mut windows: Query<&mut Window>,
-) {
+fn update_window_title(state: Res<WorldVisualState>, mut windows: Query<&mut Window>) {
     let mut window = windows.single_mut().expect("one P4 window");
     window.title = format!(
         "P4 · {:?} · route {} · {:?} · {:.0} m · LOD {:?} · cells {} · portals {}",
@@ -1017,6 +992,10 @@ fn world_center(manifest: &WorldManifest) -> Vec3 {
         .filter(|cell| !cell.is_ocean())
         .map(|cell| cell.elevation_m as f32)
         .sum::<f32>()
-        / manifest.cells.iter().filter(|cell| !cell.is_ocean()).count() as f32;
+        / manifest
+            .cells
+            .iter()
+            .filter(|cell| !cell.is_ocean())
+            .count() as f32;
     center
 }

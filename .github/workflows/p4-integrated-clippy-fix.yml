@@ -88,3 +88,5 @@ jobs:
           git commit -m "Clean integrated P4 strict Clippy findings"
           git pull --rebase origin agent/p4-integrated-world-pipeline
           git push origin HEAD:agent/p4-integrated-world-pipeline
+
+# Touching this workflow intentionally triggers the one-shot cleanup.

@@ -8,7 +8,7 @@
 2. **P1 复杂路线卷轴摄影机：已通过，存在非阻塞工程后续**。直线、九十度转向、十字路口、坡道、双向路线和镜头重构。
 3. **P2 移动参考系与内外部统一：已通过**。船舶内部局部坐标、真实窗外视差、统一主摄影机、上下船和大坐标稳定性。
 4. **P3 语义建筑编译器：已通过**。建筑蓝图、空间约束、房间与门户图、碰撞、网格块、剖视、Massing 和局部重编译。
-5. **P4 确定性世界生成：未启动**。
+5. **P4 确定性世界生成：进行中**。19 格六边形世界、山脊、流域、海岸、道路、港镇、建筑实例和跨地块卷轴路线。
 6. **P5 权威服务端、存档与回放：未启动**。
 7. **P6 模拟分级与百万身份压力测试：未启动**。
 8. **P7 多人兴趣域与区域权威：未启动**。
@@ -46,6 +46,14 @@
 - `p3-windows-visual-package`：Windows x64 人工验收包工作流；
 - `docs/evidence/p3-manual-gpu-validation-2026-08-08.md`：P3 人工通过记录。
 
+### P4
+
+- `world_generation_core`：六边形地址、版本化世界清单、地形、气候、水系、海岸、道路、港镇、地标、建筑实例和卷轴路线生成；
+- `HexTopologyValidator`、`TerrainContinuityValidator`、`HydrologyValidator`、交通、聚落、建筑、门户、地标和阶段哈希验证；
+- `p4_world_scenario`：半径 2、19 格河谷港镇确定性样板及遍历顺序扰动；
+- `p4_world_trace`：确定性、跨地块连续性、功能选址和卷轴语法无头报告；
+- `docs/prototypes/p4-deterministic-world-generation.md`：P4 技术路线和停止线。
+
 ## 本地运行
 
 需要 Rust 1.97.1：
@@ -59,6 +67,7 @@ cargo test --workspace --exclude camera_routes --exclude mobile_region_visual --
 cargo run --locked -p camera_trace -- artifacts/p1-camera-trace.json
 cargo run --locked -p p2_reference_frame_trace -- artifacts/p2-reference-frame-trace.json
 cargo run --locked -p p3_building_trace -- artifacts/p3-building-trace.json
+cargo run --locked -p p4_world_trace -- artifacts/p4-world-trace.json
 cargo run --locked -p camera_routes
 cargo run --locked -p mobile_region_visual
 cargo run --locked -p building_visual
@@ -93,11 +102,12 @@ cargo run --locked -p building_visual
 - 领域核心 crate 不得依赖 Bevy、窗口、渲染、具体网络库或数据库；
 - Bevy `Entity`、`Transform`、资产句柄不得进入持久化协议；
 - 世界生成语义结果必须可复现，线程调度顺序不得改变结果；
+- 山脉、河流、道路、建筑和地标先作为世界事实成立，摄影机不得移动它们来配合构图；
+- 相邻地块共享同一边界键和同一跨界门户，不允许各自生成互相矛盾的边缘；
 - 移动区域使用刚性参考系，不允许通过缩放伪造内部空间；
 - 权威导航姿态与客户端表现摇摆必须分离；
 - 窗外世界必须是真实几何，不使用第二摄影机贴图冒充普通窗口；
 - 建筑蓝图和空间语义是权威数据，网格、碰撞、导航和 HLOD 是可重建派生数据；
-- 摄影机可以重新构图，但不得移动世界地标来配合画面；
 - 原型只有通过对应停止线后，下一阶段才可扩大范围。
 
 详见 [`docs/technical-preproduction.md`](docs/technical-preproduction.md)。

@@ -17,13 +17,27 @@ on:
       - docs/visual-acceptance/p4-checklist.md
       - scripts/collect_p4_machine_info.ps1
       - .github/workflows/p4-windows-visual-package.yml
+  pull_request:
+    paths:
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+      - apps/world_visual/**
+      - crates/world_generation_core/**
+      - crates/p4_world_scenario/**
+      - crates/scroll_camera_core/**
+      - crates/building_core/**
+      - crates/p3_building_scenario/**
+      - docs/visual-acceptance/p4-checklist.md
+      - scripts/collect_p4_machine_info.ps1
+      - .github/workflows/p4-windows-visual-package.yml
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: p4-windows-visual-package-${{ github.ref }}
+  group: p4-windows-visual-package-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -105,22 +119,3 @@ jobs:
           path: dist
           if-no-files-found: error
           retention-days: 30
-
-      - name: Record successful package build
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path docs/evidence | Out-Null
-          @"
-          # P4 Windows 验证包已生成
-
-          Workflow run: $env:GITHUB_RUN_ID
-          Source commit: $env:GITHUB_SHA
-          Artifact: p4-deterministic-world-windows-x64
-          Build profile: dev (workspace optimized dependencies)
-          Purpose: P4 deterministic generated-world GPU validation only
-          "@ | Set-Content -Encoding UTF8 docs/evidence/p4-package-ready.md
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/evidence/p4-package-ready.md
-          git commit -m "Record P4 Windows validation package"
-          git push origin HEAD:agent/p4-deterministic-world-generation

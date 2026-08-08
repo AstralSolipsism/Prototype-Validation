@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-use building_core::{BlueprintDelta, apply_delta, compile_blueprint, impact_for_delta};
+use building_core::{apply_delta, compile_blueprint, impact_for_delta};
 use p3_building_scenario::{
     add_north_display_window_delta, inaccessible_upper_floor, moving_platform_binding,
     static_world_binding, two_storey_shop,
@@ -53,11 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let blueprint = two_storey_shop();
     let baseline = compile_blueprint(&blueprint)?;
     let repeated = compile_blueprint(&blueprint)?;
-    let mut delta = add_north_display_window_delta();
-    let BlueprintDelta::AddOpening(opening) = &mut delta else {
-        unreachable!("scenario delta must add an opening");
-    };
-    opening.offset_m = 4.0;
+    let delta = add_north_display_window_delta();
     let dirty = impact_for_delta(&blueprint, &delta)?;
     let updated_blueprint = apply_delta(&blueprint, &delta)?;
     let updated = compile_blueprint(&updated_blueprint)?;

@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   generate:
-    name: generate and commit Cargo.lock
+    name: generate lockfile and apply integrated source cleanup
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -39,23 +39,78 @@ jobs:
         with:
           ref: ${{ env.TARGET_BRANCH }}
 
+      - name: Apply integrated P4 strict-Clippy cleanup
+        if: env.TARGET_BRANCH == 'agent/p4-integrated-world-pipeline'
+        shell: python
+        run: |
+          from pathlib import Path
+
+          atlas = Path("crates/integrated_world_core/src/atlas.rs")
+          text = atlas.read_text(encoding="utf-8")
+          text = text.replace(
+              "    let settlement_cell = manifest\n        .cell(settlement.cell)\n        .expect(\"settlement cell exists\");\n",
+              "",
+              1,
+          )
+          old = """        if let Some(cell) = manifest.cells.iter().min_by(|left, right| {
+            left.center_world
+                .xz()
+                .distance_squared(point.xz())
+                .total_cmp(&right.center_world.xz().distance_squared(point.xz()))
+        }) {
+            if cell.center_world.xz().distance(point.xz()) <= manifest.cell_radius_m * 1.35 {
+                touched.insert(cell.coord);
+            }
+        }
+"""
+          new = """        if let Some(cell) = manifest.cells.iter().min_by(|left, right| {
+            left.center_world
+                .xz()
+                .distance_squared(point.xz())
+                .total_cmp(&right.center_world.xz().distance_squared(point.xz()))
+        }) && cell.center_world.xz().distance(point.xz()) <= manifest.cell_radius_m * 1.35
+        {
+            touched.insert(cell.coord);
+        }
+"""
+          if old in text:
+              text = text.replace(old, new, 1)
+          atlas.write_text(text, encoding="utf-8")
+
+          traversal = Path("crates/integrated_world_core/src/traversal.rs")
+          text = traversal.read_text(encoding="utf-8")
+          text = text.replace(
+              "fn nearest_sample<'a>(grid: &'a TerrainGrid, point: DVec2) -> &'a TerrainSample {",
+              "fn nearest_sample(grid: &TerrainGrid, point: DVec2) -> &TerrainSample {",
+              1,
+          )
+          traversal.write_text(text, encoding="utf-8")
+
+          Path(".github/workflows/p4-integrated-clippy-fix.yml").unlink(missing_ok=True)
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.97.1
+          components: rustfmt
+
+      - name: Format integrated source
+        if: env.TARGET_BRANCH == 'agent/p4-integrated-world-pipeline'
+        run: cargo fmt --all
 
       - name: Generate dependency lockfile
         run: cargo generate-lockfile
 
-      - name: Commit lockfile when changed
+      - name: Commit generated and cleaned files when changed
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Cargo.lock
+          git add -A
           if git diff --cached --quiet; then
-            echo "Cargo.lock is already current."
+            echo "Cargo.lock and integrated sources are already current."
             exit 0
           fi
-          git commit -m "Lock Rust dependencies"
+          git commit -m "Clean integrated P4 sources and lock dependencies"
+          git pull --rebase origin "${TARGET_BRANCH}"
           git push origin "HEAD:${TARGET_BRANCH}"

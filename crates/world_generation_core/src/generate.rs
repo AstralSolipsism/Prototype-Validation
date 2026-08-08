@@ -14,10 +14,6 @@ use world_ids::{
 
 const STAGE_TERRAIN: u64 = 0x1001;
 const STAGE_CLIMATE: u64 = 0x1002;
-const STAGE_HYDROLOGY: u64 = 0x1003;
-const STAGE_TRANSPORT: u64 = 0x1004;
-const STAGE_SETTLEMENT: u64 = 0x1005;
-const STAGE_ROUTE: u64 = 0x1006;
 const FEATURE_CELL: u128 = 0x01;
 const FEATURE_ELEVATION: u128 = 0x02;
 const FEATURE_CLIMATE: u128 = 0x03;
@@ -74,13 +70,8 @@ pub fn generate_world_with_order(
     match traversal {
         TraversalOrder::Canonical => {}
         TraversalOrder::Reverse => traversal_coords.reverse(),
-        TraversalOrder::Parity => traversal_coords.sort_by_key(|coord| {
-            (
-                i32::from(coord.q + coord.r).rem_euclid(2),
-                coord.q,
-                coord.r,
-            )
-        }),
+        TraversalOrder::Parity => traversal_coords
+            .sort_by_key(|coord| (i32::from(coord.q + coord.r).rem_euclid(2), coord.q, coord.r)),
     }
 
     let mut drafts = BTreeMap::new();
@@ -196,13 +187,12 @@ fn generate_cell(config: WorldGenerationConfig, coord: HexCoord) -> CellDraft {
     let temperature_c = if surface == SurfaceClass::Ocean {
         15.0 - f64::from(coord.r.abs()) * 0.6
     } else {
-        21.0
-            - f64::from(coord.r.abs()) * 1.2
+        21.0 - f64::from(coord.r.abs()) * 1.2
             - elevation_m.max(0.0) * 0.0075
             - distance_from_ocean * 0.25
     };
-    let moisture = (0.9 - distance_from_ocean * 0.075 + (climate_noise - 0.5) * 0.14)
-        .clamp(0.2, 1.0);
+    let moisture =
+        (0.9 - distance_from_ocean * 0.075 + (climate_noise - 0.5) * 0.14).clamp(0.2, 1.0);
     let climate = Climate {
         temperature_c,
         moisture,
@@ -437,7 +427,11 @@ fn greedy_land_path(
             .min_by(|left, right| {
                 left.distance(end)
                     .cmp(&right.distance(end))
-                    .then_with(|| drafts[left].travel_cost.total_cmp(&drafts[right].travel_cost))
+                    .then_with(|| {
+                        drafts[left]
+                            .travel_cost
+                            .total_cmp(&drafts[right].travel_cost)
+                    })
                     .then_with(|| left.cmp(right))
             })?;
         if !visited.insert(next) {
@@ -466,11 +460,7 @@ fn generate_landmark(
         id: LandmarkId::from_u128(stable_value(config, 0xD301, coord_key(cell.coord), 1)),
         kind: LandmarkKind::MountainTower,
         cell: cell.coord,
-        world_position: DVec3::new(
-            cell.center_xz.x,
-            cell.elevation_m + 90.0,
-            cell.center_xz.y,
-        ),
+        world_position: DVec3::new(cell.center_xz.x, cell.elevation_m + 90.0, cell.center_xz.y),
         visible_radius_m: config.cell_radius_m * 8.0,
     }
 }
@@ -519,8 +509,7 @@ fn route_nodes(
         if let Some(next) = cells.get(index + 1).copied() {
             let next_cell = &drafts[&next];
             let next_turns = if index + 2 < cells.len() {
-                HexDirection::between(coord, next)
-                    != HexDirection::between(next, cells[index + 2])
+                HexDirection::between(coord, next) != HexDirection::between(next, cells[index + 2])
             } else {
                 false
             };

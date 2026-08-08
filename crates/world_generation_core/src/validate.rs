@@ -37,10 +37,7 @@ pub enum WorldValidationError {
     #[error("river path is empty or does not end in ocean")]
     RiverDoesNotReachOcean,
     #[error("river cells {left:?} and {right:?} are not adjacent")]
-    DisconnectedRiver {
-        left: HexCoord,
-        right: HexCoord,
-    },
+    DisconnectedRiver { left: HexCoord, right: HexCoord },
     #[error("river path does not follow the cell downstream relation at {0:?}")]
     RiverIgnoresDownstream(HexCoord),
     #[error("coastline boundary {0:?} does not separate land and ocean")]
@@ -114,7 +111,8 @@ impl Error for ValidationReport {}
 
 pub fn validate_world(manifest: &WorldManifest) -> Result<(), ValidationReport> {
     let mut errors = Vec::new();
-    let expected_cells = 1 + 3 * usize::from(manifest.radius as u16) * usize::from((manifest.radius + 1) as u16);
+    let radius = usize::try_from(manifest.radius).unwrap_or(0);
+    let expected_cells = 1 + 3 * radius * (radius + 1);
     if manifest.cells.len() != expected_cells {
         errors.push(WorldValidationError::CellCount {
             actual: manifest.cells.len(),
@@ -143,7 +141,10 @@ pub fn validate_world(manifest: &WorldManifest) -> Result<(), ValidationReport> 
         if scalars.iter().any(|value| !value.is_finite())
             || !(0.0..=1.0).contains(&cell.climate.moisture)
             || cell.travel_cost <= 0.0
-            || cell.edge_elevations_m.iter().any(|value| !value.is_finite())
+            || cell
+                .edge_elevations_m
+                .iter()
+                .any(|value| !value.is_finite())
         {
             errors.push(WorldValidationError::InvalidCellScalar(cell.coord));
         }
@@ -264,7 +265,10 @@ fn validate_coastline(
     for cell in manifest.cells.iter().filter(|cell| !cell.is_ocean()) {
         for direction in HexDirection::ALL {
             let neighbor_coord = cell.coord.neighbor(direction);
-            if coords.get(&neighbor_coord).is_some_and(|neighbor| neighbor.is_ocean()) {
+            if coords
+                .get(&neighbor_coord)
+                .is_some_and(|neighbor| neighbor.is_ocean())
+            {
                 let boundary = BoundaryKey::new(cell.coord, neighbor_coord)
                     .expect("neighboring cells have a boundary");
                 if !coastline.contains(&boundary) {
@@ -327,11 +331,10 @@ fn validate_settlement_roads_routes(
         if road.cells.len() < 2
             || road.cells.last().copied() != Some(settlement.cell)
             || road.boundaries != boundaries_for(&road.cells)
-            || road.cells.iter().any(|coord| {
-                coords
-                    .get(coord)
-                    .is_none_or(|cell| cell.is_ocean())
-            })
+            || road
+                .cells
+                .iter()
+                .any(|coord| coords.get(coord).is_none_or(|cell| cell.is_ocean()))
         {
             errors.push(WorldValidationError::InvalidRoad(road.id));
         }
@@ -342,15 +345,25 @@ fn validate_settlement_roads_routes(
         .iter()
         .map(|route| (route.id, route))
         .collect::<BTreeMap<_, _>>();
-    let mut grammars = BTreeSet::new();
+    let mut grammars = Vec::new();
     for route in &manifest.routes {
-        let valid_road = roads.get(&route.road_id).is_some_and(|road| road.cells == route.cells);
-        let finite_nodes = route.nodes.iter().all(|node| node.world_position.is_finite());
+        let valid_road = roads
+            .get(&route.road_id)
+            .is_some_and(|road| road.cells == route.cells);
+        let finite_nodes = route
+            .nodes
+            .iter()
+            .all(|node| node.world_position.is_finite());
         let connected = route
             .cells
             .windows(2)
             .all(|pair| pair[0].distance(pair[1]) == 1);
-        if route.cells.len() < 2 || route.nodes.is_empty() || !valid_road || !finite_nodes || !connected {
+        if route.cells.len() < 2
+            || route.nodes.is_empty()
+            || !valid_road
+            || !finite_nodes
+            || !connected
+        {
             errors.push(WorldValidationError::InvalidRoute(route.id));
         }
         grammars.extend(route.nodes.iter().map(|node| node.grammar));
@@ -380,9 +393,9 @@ fn validate_settlement_roads_routes(
             || !building.half_extents_m.is_finite()
             || building.half_extents_m.min_element() <= 0.0
             || !building.yaw_radians.is_finite()
-            || routes.get(&building.entry_route_id).is_none_or(|route| {
-                !route.cells.contains(&settlement.cell)
-            })
+            || routes
+                .get(&building.entry_route_id)
+                .is_none_or(|route| !route.cells.contains(&settlement.cell))
         {
             errors.push(WorldValidationError::InvalidBuilding(building.instance_id));
         }
@@ -432,11 +445,21 @@ fn validate_portals(
         .map(|portal| (portal.boundary, portal_kind_key(portal.kind)))
         .collect::<BTreeSet<_>>();
     for boundary in &manifest.river.boundaries {
-        require_portal(existing.contains(&(*boundary, 0)), PortalKind::River, *boundary, errors);
+        require_portal(
+            existing.contains(&(*boundary, 0)),
+            PortalKind::River,
+            *boundary,
+            errors,
+        );
     }
     for road in &manifest.roads {
         for boundary in &road.boundaries {
-            require_portal(existing.contains(&(*boundary, 1)), PortalKind::Road, *boundary, errors);
+            require_portal(
+                existing.contains(&(*boundary, 1)),
+                PortalKind::Road,
+                *boundary,
+                errors,
+            );
         }
     }
     for route in &manifest.routes {
@@ -451,10 +474,7 @@ fn validate_portals(
     }
 }
 
-fn validate_landmark_and_stages(
-    manifest: &WorldManifest,
-    errors: &mut Vec<WorldValidationError>,
-) {
+fn validate_landmark_and_stages(manifest: &WorldManifest, errors: &mut Vec<WorldValidationError>) {
     if manifest.landmarks.len() != 1 {
         errors.push(WorldValidationError::InvalidLandmark);
     } else {
@@ -462,9 +482,10 @@ fn validate_landmark_and_stages(
         if !landmark.world_position.is_finite()
             || !landmark.visible_radius_m.is_finite()
             || landmark.visible_radius_m <= 0.0
-            || manifest.routes.iter().any(|route| {
-                route.visible_landmark_ids.as_slice() != [landmark.id]
-            })
+            || manifest
+                .routes
+                .iter()
+                .any(|route| route.visible_landmark_ids.as_slice() != [landmark.id])
         {
             errors.push(WorldValidationError::InvalidLandmark);
         }

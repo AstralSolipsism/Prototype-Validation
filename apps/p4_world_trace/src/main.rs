@@ -52,8 +52,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let deterministic_across_traversal_orders = canonical.semantic_fingerprint
         == reverse.semantic_fingerprint
         && canonical.semantic_fingerprint == parity.semantic_fingerprint;
-    let manifests_identical_across_orders = canonical.manifest == reverse.manifest
-        && canonical.manifest == parity.manifest;
+    let manifests_identical_across_orders =
+        canonical.manifest == reverse.manifest && canonical.manifest == parity.manifest;
 
     let manifest = &canonical.manifest;
     let settlement = manifest.settlements.first();
@@ -71,9 +71,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     });
 
     let all_routes_reference_same_landmark = manifest.landmarks.len() == 1
-        && manifest.routes.iter().all(|route| {
-            route.visible_landmark_ids.as_slice() == [manifest.landmarks[0].id]
-        });
+        && manifest
+            .routes
+            .iter()
+            .all(|route| route.visible_landmark_ids.as_slice() == [manifest.landmarks[0].id]);
     let grammars = manifest
         .routes
         .iter()

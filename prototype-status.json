@@ -72,7 +72,6 @@
         "deterministic two-storey building scenario",
         "successful P3 headless building report in CI run 31244924099",
         "Bevy static and moving building visual prototype",
-        "full, exterior-shell, massing, cutaway and localized-window modes",
         "successful Windows package run 31245427276",
         "manual GPU validation",
         "manual result recorded in docs/evidence/p3-manual-gpu-validation-2026-08-08.md"
@@ -85,7 +84,29 @@
         "visual regression recordings and screenshots"
       ]
     },
-    {"id":"P4","status":"not-started","passed":false},
+    {
+      "id": "P4",
+      "name": "deterministic-world-generation",
+      "status": "implementation-in-progress",
+      "passed": false,
+      "evidence_present": [
+        "P4 acceptance specification in Issue #11",
+        "P4 prototype design document",
+        "hex topology primitives authored",
+        "versioned world manifest model authored",
+        "deterministic terrain, climate, hydrology, transport, settlement and route pipeline authored",
+        "world constraint validators authored",
+        "radius-two world scenario authored",
+        "P4 headless trace authored"
+      ],
+      "evidence_missing": [
+        "P4 Rust CI",
+        "P4 headless world report",
+        "Bevy generated-world visual prototype",
+        "Windows GPU validation package",
+        "P4 manual GPU validation"
+      ]
+    },
     {"id":"P5","status":"not-started","passed":false},
     {"id":"P6","status":"not-started","passed":false},
     {"id":"P7","status":"not-started","passed":false},

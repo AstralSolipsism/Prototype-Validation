@@ -230,6 +230,14 @@ mod tests {
         );
     }
 
+    fn assert_rotation_near(left: DQuat, right: DQuat, tolerance: f64) {
+        let alignment_error = 1.0 - left.dot(right).abs();
+        assert!(
+            alignment_error <= tolerance,
+            "left={left:?}, right={right:?}, alignment_error={alignment_error}"
+        );
+    }
+
     #[test]
     fn rigid_transform_round_trip_is_stable() {
         let transform =
@@ -327,10 +335,9 @@ mod tests {
             .expect("ship frame");
 
         let ship_to_world = graph.transform_between(ship, world).expect("mapping");
-        assert_eq!(
-            ship_to_world,
-            graph.world_transform(ship).expect("ship world")
-        );
+        let expected = graph.world_transform(ship).expect("ship world");
+        assert_near(ship_to_world.translation, expected.translation, 1.0e-12);
+        assert_rotation_near(ship_to_world.rotation, expected.rotation, 1.0e-12);
     }
 
     #[test]

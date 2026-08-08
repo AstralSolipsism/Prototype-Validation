@@ -11,9 +11,7 @@ use integrated_world_core::{
     LandCover, LandUseKind, LandformClass, TerrainGrid, detailed_height,
 };
 use p4_integrated_scenario::generate_integrated_baseline;
-use scroll_camera_core::{
-    CameraRigConfig, CameraRigState, PolylineRoute, ScrollGrammar, ViewSide,
-};
+use scroll_camera_core::{CameraRigConfig, CameraRigState, PolylineRoute, ScrollGrammar, ViewSide};
 use std::{collections::BTreeMap, f32::consts::PI};
 use world_generation_core::HexCoord;
 use world_ids::{BuildingInstanceId, EntityId};
@@ -280,11 +278,7 @@ fn setup(
     spawn_atlas(&mut commands, &mut meshes, &mut materials, &assets, &world);
     spawn_local_world(&mut commands, &mut meshes, &assets, &world);
 
-    commands.spawn((
-        Camera3d::default(),
-        Transform::IDENTITY,
-        PrototypeCamera,
-    ));
+    commands.spawn((Camera3d::default(), Transform::IDENTITY, PrototypeCamera));
     commands.spawn((
         DirectionalLight {
             illuminance: 24_000.0,
@@ -404,15 +398,9 @@ fn spawn_atlas(
             AtlasFeatureKind::ValleyLine => {
                 (assets.contour_minor.clone(), 3.0, 1.4, VisualKind::Always)
             }
-            AtlasFeatureKind::River => {
-                (assets.river.clone(), 7.0, 1.6, VisualKind::Always)
-            }
-            AtlasFeatureKind::Coastline => {
-                (assets.coast.clone(), 5.5, 1.8, VisualKind::Always)
-            }
-            AtlasFeatureKind::RoadCorridor => {
-                (assets.road.clone(), 4.0, 1.4, VisualKind::Always)
-            }
+            AtlasFeatureKind::River => (assets.river.clone(), 7.0, 1.6, VisualKind::Always),
+            AtlasFeatureKind::Coastline => (assets.coast.clone(), 5.5, 1.8, VisualKind::Always),
+            AtlasFeatureKind::RoadCorridor => (assets.road.clone(), 4.0, 1.4, VisualKind::Always),
             AtlasFeatureKind::Settlement | AtlasFeatureKind::Landmark => continue,
         };
         for pair in feature.path_world.windows(2) {
@@ -436,12 +424,13 @@ fn spawn_atlas(
         commands.spawn((
             Mesh3d(assets.cube.clone()),
             MeshMaterial3d(material_for_land_use(assets, zone.kind)),
-            Transform::from_translation(map_point(zone.center_world.xz(), 3.1))
-                .with_scale(Vec3::new(
+            Transform::from_translation(map_point(zone.center_world.xz(), 3.1)).with_scale(
+                Vec3::new(
                     (zone.radius_m as f32 * 1.35 * ATLAS_SCALE).max(8.0),
                     1.2,
                     (zone.radius_m as f32 * 1.35 * ATLAS_SCALE).max(8.0),
-                )),
+                ),
+            ),
             VisualTag {
                 space: VisualSpace::Atlas,
                 kind: VisualKind::AtlasHistory,
@@ -562,12 +551,13 @@ fn spawn_local_world(
         commands.spawn((
             Mesh3d(assets.cube.clone()),
             MeshMaterial3d(material_for_land_use(assets, zone.kind)),
-            Transform::from_translation(zone.center_world.as_vec3() + Vec3::Y * 0.8)
-                .with_scale(Vec3::new(
+            Transform::from_translation(zone.center_world.as_vec3() + Vec3::Y * 0.8).with_scale(
+                Vec3::new(
                     zone.radius_m as f32 * 1.45,
                     1.1,
                     zone.radius_m as f32 * 1.45,
-                )),
+                ),
+            ),
             VisualTag {
                 space: VisualSpace::Local,
                 kind: VisualKind::LocalHistory,
@@ -577,27 +567,31 @@ fn spawn_local_world(
 
     for asset in &world.history.assets {
         let (material, scale) = match asset.kind {
-            HistoricalAssetKind::Harbor => {
-                (assets.harbor.clone(), Vec3::new(asset.extent_m.x as f32, 3.0, asset.extent_m.y as f32))
-            }
-            HistoricalAssetKind::Bridge => {
-                (assets.road.clone(), Vec3::new(asset.extent_m.x as f32, 2.2, asset.extent_m.y as f32))
-            }
-            HistoricalAssetKind::Farmland => {
-                (assets.farmland.clone(), Vec3::new(asset.extent_m.x as f32, 1.2, asset.extent_m.y as f32))
-            }
-            HistoricalAssetKind::Fortification => {
-                (assets.fortification.clone(), Vec3::new(asset.extent_m.x as f32, 10.0, asset.extent_m.y as f32))
-            }
-            HistoricalAssetKind::Ruins => {
-                (assets.ruins.clone(), Vec3::new(asset.extent_m.x as f32, 5.0, asset.extent_m.y as f32))
-            }
-            HistoricalAssetKind::Monument => {
-                (assets.monument.clone(), Vec3::new(5.0, 18.0, 5.0))
-            }
-            HistoricalAssetKind::OldRoad | HistoricalAssetKind::NewRoad => {
-                (assets.road.clone(), Vec3::new(asset.extent_m.x as f32, 1.0, asset.extent_m.y as f32))
-            }
+            HistoricalAssetKind::Harbor => (
+                assets.harbor.clone(),
+                Vec3::new(asset.extent_m.x as f32, 3.0, asset.extent_m.y as f32),
+            ),
+            HistoricalAssetKind::Bridge => (
+                assets.road.clone(),
+                Vec3::new(asset.extent_m.x as f32, 2.2, asset.extent_m.y as f32),
+            ),
+            HistoricalAssetKind::Farmland => (
+                assets.farmland.clone(),
+                Vec3::new(asset.extent_m.x as f32, 1.2, asset.extent_m.y as f32),
+            ),
+            HistoricalAssetKind::Fortification => (
+                assets.fortification.clone(),
+                Vec3::new(asset.extent_m.x as f32, 10.0, asset.extent_m.y as f32),
+            ),
+            HistoricalAssetKind::Ruins => (
+                assets.ruins.clone(),
+                Vec3::new(asset.extent_m.x as f32, 5.0, asset.extent_m.y as f32),
+            ),
+            HistoricalAssetKind::Monument => (assets.monument.clone(), Vec3::new(5.0, 18.0, 5.0)),
+            HistoricalAssetKind::OldRoad | HistoricalAssetKind::NewRoad => (
+                assets.road.clone(),
+                Vec3::new(asset.extent_m.x as f32, 1.0, asset.extent_m.y as f32),
+            ),
             HistoricalAssetKind::OldQuarter | HistoricalAssetKind::NewQuarter => continue,
         };
         commands.spawn((
@@ -861,9 +855,10 @@ fn control_app(
 
 fn update_visual_visibility(
     state: Res<VisualState>,
-    mut visuals: Query<(&VisualTag, &mut Visibility)>,
+    visuals: Query<(Entity, &VisualTag)>,
+    mut commands: Commands,
 ) {
-    for (tag, mut visibility) in &mut visuals {
+    for (entity, tag) in &visuals {
         let space_visible = match tag.space {
             VisualSpace::Atlas => state.mode == AppMode::Atlas,
             VisualSpace::Local => state.mode != AppMode::Atlas,
@@ -879,14 +874,15 @@ fn update_visual_visibility(
             VisualKind::BuildingShell => state.building_lod == BuildingLod::Shell,
             VisualKind::BuildingMassing => state.building_lod == BuildingLod::Massing,
         };
-        *visibility = if space_visible && kind_visible {
-            Visibility::Visible
-        } else {
-            Visibility::Hidden
-        };
+        commands
+            .entity(entity)
+            .insert(if space_visible && kind_visible {
+                Visibility::Visible
+            } else {
+                Visibility::Hidden
+            });
     }
 }
-
 fn update_atlas_cell_materials(
     state: Res<VisualState>,
     world: Res<WorldData>,
@@ -936,10 +932,12 @@ fn update_camera_and_route_subject(
         state.overview_angle -= orbit_speed * time.delta_secs();
     }
     if keyboard.pressed(KeyCode::ArrowUp) {
-        state.overview_height = (state.overview_height + 90.0 * time.delta_secs()).clamp(80.0, 520.0);
+        state.overview_height =
+            (state.overview_height + 90.0 * time.delta_secs()).clamp(80.0, 520.0);
     }
     if keyboard.pressed(KeyCode::ArrowDown) {
-        state.overview_height = (state.overview_height - 90.0 * time.delta_secs()).clamp(80.0, 520.0);
+        state.overview_height =
+            (state.overview_height - 90.0 * time.delta_secs()).clamp(80.0, 520.0);
     }
 
     let selected = &world.0.atlas.cells[state.selected_cell_index];
@@ -952,10 +950,9 @@ fn update_camera_and_route_subject(
                 MAP_Y,
                 selected_world.y as f32 * ATLAS_SCALE,
             );
-            *camera_transform = Transform::from_translation(
-                target + Vec3::new(0.0, ATLAS_HEIGHT, 0.01),
-            )
-            .looking_at(target, Vec3::NEG_Z);
+            *camera_transform =
+                Transform::from_translation(target + Vec3::new(0.0, ATLAS_HEIGHT, 0.01))
+                    .looking_at(target, Vec3::NEG_Z);
         }
         AppMode::LocalOverview => {
             let target_y = detailed_height(
@@ -963,7 +960,11 @@ fn update_camera_and_route_subject(
                 world.0.atlas.cell_radius_m,
                 selected_world,
             ) as f32;
-            let target = Vec3::new(selected_world.x as f32, target_y + 18.0, selected_world.y as f32);
+            let target = Vec3::new(
+                selected_world.x as f32,
+                target_y + 18.0,
+                selected_world.y as f32,
+            );
             let position = target
                 + Vec3::new(
                     state.overview_angle.sin() * state.overview_radius,
@@ -1000,7 +1001,8 @@ fn update_camera_and_route_subject(
             *camera_transform = Transform::from_translation(pose.position.as_vec3())
                 .looking_at(pose.target.as_vec3(), pose.up.as_vec3());
             let mut subject_transform = subject.single_mut().expect("one route subject");
-            subject_transform.translation = frame.position.as_vec3() + Vec3::Y * (SUBJECT_HEIGHT_M * 0.5);
+            subject_transform.translation =
+                frame.position.as_vec3() + Vec3::Y * (SUBJECT_HEIGHT_M * 0.5);
             subject_transform.rotation =
                 Quat::from_rotation_y((-(frame.tangent.z as f32)).atan2(frame.tangent.x as f32));
         }
@@ -1031,11 +1033,7 @@ fn update_window_title(
         ),
         AppMode::LocalOverview => format!(
             "P4 integrated · LOCAL OVERVIEW · cell ({},{}) · history {} · LOD {:?} · routes {}",
-            cell.coord.q,
-            cell.coord.r,
-            state.show_history,
-            state.building_lod,
-            state.show_routes,
+            cell.coord.q, cell.coord.r, state.show_history, state.building_lod, state.show_routes,
         ),
         AppMode::RouteTravel => {
             let route = &world.0.traversal.routes[state.route_index];
@@ -1144,10 +1142,17 @@ fn detailed_terrain_mesh(grid: &TerrainGrid) -> Mesh {
 
 fn terrain_normal(grid: &TerrainGrid, x: usize, z: usize) -> Vec3 {
     let sample_height = |sx: usize, sz: usize| {
-        grid.sample(sx.min(usize::from(grid.width) - 1), sz.min(usize::from(grid.height) - 1))
-            .filter(|sample| sample.cell.is_some())
-            .map(|sample| sample.world_position.y as f32)
-            .unwrap_or_else(|| grid.sample(x, z).map(|sample| sample.world_position.y as f32).unwrap_or(0.0))
+        grid.sample(
+            sx.min(usize::from(grid.width) - 1),
+            sz.min(usize::from(grid.height) - 1),
+        )
+        .filter(|sample| sample.cell.is_some())
+        .map(|sample| sample.world_position.y as f32)
+        .unwrap_or_else(|| {
+            grid.sample(x, z)
+                .map(|sample| sample.world_position.y as f32)
+                .unwrap_or(0.0)
+        })
     };
     let left = sample_height(x.saturating_sub(1), z);
     let right = sample_height((x + 1).min(usize::from(grid.width) - 1), z);
@@ -1197,7 +1202,11 @@ fn atlas_cell_color(cell: &AtlasCellSpec, layer: AtlasLayer, all: &[AtlasCellSpe
         AtlasLayer::Climate => {
             let warmth = ((cell.climate.temperature_c + 5.0) / 30.0).clamp(0.0, 1.0) as f32;
             let moisture = cell.climate.moisture.clamp(0.0, 1.0) as f32;
-            Color::srgb(0.20 + warmth * 0.65, 0.22 + moisture * 0.58, 0.58 - warmth * 0.35)
+            Color::srgb(
+                0.20 + warmth * 0.65,
+                0.22 + moisture * 0.58,
+                0.58 - warmth * 0.35,
+            )
         }
         AtlasLayer::Resources => {
             let value = ((cell.resources.fresh_water
@@ -1207,7 +1216,11 @@ fn atlas_cell_color(cell: &AtlasCellSpec, layer: AtlasLayer, all: &[AtlasCellSpe
                 + cell.resources.harbor_quality)
                 / 5.0)
                 .clamp(0.0, 1.0) as f32;
-            Color::srgb(0.20 + value * 0.72, 0.18 + value * 0.62, 0.16 + value * 0.12)
+            Color::srgb(
+                0.20 + value * 0.72,
+                0.18 + value * 0.62,
+                0.16 + value * 0.12,
+            )
         }
         AtlasLayer::History => {
             let population = (cell.history.current_population as f32 / 4_500.0).clamp(0.0, 1.0);
@@ -1270,11 +1283,8 @@ fn contour_segments(world: &IntegratedWorld, level: f64) -> Vec<(glam::DVec2, gl
     for z in 0..resolution {
         for x in 0..resolution {
             let point = minimum + glam::DVec2::new(x as f64 * step.x, z as f64 * step.y);
-            heights[z * resolution + x] = detailed_height(
-                world.atlas.world_seed,
-                world.atlas.cell_radius_m,
-                point,
-            );
+            heights[z * resolution + x] =
+                detailed_height(world.atlas.world_seed, world.atlas.cell_radius_m, point);
         }
     }
     let mut result = Vec::new();
@@ -1332,7 +1342,10 @@ fn spawn_flat_hex_outline(
     let center = coord.center_xz(radius);
     let corners = std::array::from_fn::<_, 6, _>(|index| {
         let angle = (30.0 + index as f64 * 60.0).to_radians();
-        map_point(center + glam::DVec2::new(angle.cos(), angle.sin()) * radius, y)
+        map_point(
+            center + glam::DVec2::new(angle.cos(), angle.sin()) * radius,
+            y,
+        )
     });
     for index in 0..6 {
         spawn_segment(

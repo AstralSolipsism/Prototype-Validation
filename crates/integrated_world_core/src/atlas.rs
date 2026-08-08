@@ -79,9 +79,6 @@ pub fn build_atlas(base: &WorldCompilation) -> Result<WorldAtlasManifest, serde_
         .settlements
         .first()
         .expect("P4A manifest contains one settlement");
-    let settlement_cell = manifest
-        .cell(settlement.cell)
-        .expect("settlement cell exists");
     let settlement_xz = settlement.cell.center_xz(manifest.cell_radius_m);
     features.push(AtlasFeature {
         id: EntityId::from_u128(settlement.id.as_u128()),
@@ -651,10 +648,9 @@ fn cells_touched_by_path(manifest: &WorldManifest, path: &[DVec3]) -> Vec<HexCoo
                 .xz()
                 .distance_squared(point.xz())
                 .total_cmp(&right.center_world.xz().distance_squared(point.xz()))
-        }) {
-            if cell.center_world.xz().distance(point.xz()) <= manifest.cell_radius_m * 1.35 {
-                touched.insert(cell.coord);
-            }
+        }) && cell.center_world.xz().distance(point.xz()) <= manifest.cell_radius_m * 1.35
+        {
+            touched.insert(cell.coord);
         }
     }
     touched.into_iter().collect()

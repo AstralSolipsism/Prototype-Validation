@@ -1,5 +1,4 @@
 #![forbid(unsafe_code)]
-#![allow(unused_variables, clippy::collapsible_if, clippy::needless_lifetimes)]
 
 mod atlas;
 mod history;

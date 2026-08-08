@@ -446,7 +446,7 @@ fn corridor_modifier(history: &HistoryLedger, point: DVec3) -> f64 {
     }
 }
 
-fn nearest_sample<'a>(grid: &'a TerrainGrid, point: DVec2) -> &'a TerrainSample {
+fn nearest_sample(grid: &TerrainGrid, point: DVec2) -> &TerrainSample {
     grid.samples
         .iter()
         .filter(|sample| sample.cell.is_some())

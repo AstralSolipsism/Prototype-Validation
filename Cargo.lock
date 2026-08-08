@@ -3047,6 +3047,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "integrated_world_visual"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "glam",
+ "integrated_world_core",
+ "p3_building_scenario",
+ "p4_integrated_scenario",
+ "scroll_camera_core",
+ "world_generation_core",
+ "world_ids",
+]
+
+[[package]]
 name = "inventory"
 version = "0.3.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"

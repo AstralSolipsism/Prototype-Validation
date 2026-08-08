@@ -1,7 +1,7 @@
 use crate::atlas::{digest, river_center_z, stable_entity};
 use crate::model::*;
 use glam::{DVec2, DVec3, Vec3Swizzles};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use world_generation_core::{HexCoord, WorldManifest};
 use world_ids::{EntityId, EventId, RegionId};
 
@@ -354,11 +354,34 @@ pub fn apply_history_to_atlas(
     history: &HistoryLedger,
 ) -> Result<(), serde_json::Error> {
     let cell_radius_m = atlas.cell_radius_m;
+    let event_cells = history
+        .events
+        .iter()
+        .map(|event| {
+            let point = event.location.xz();
+            let coord = atlas
+                .cells
+                .iter()
+                .find(|cell| cell_at_position(cell.coord, cell_radius_m, point))
+                .or_else(|| {
+                    atlas.cells.iter().min_by(|left, right| {
+                        left.center_world
+                            .xz()
+                            .distance_squared(point)
+                            .total_cmp(&right.center_world.xz().distance_squared(point))
+                    })
+                })
+                .map(|cell| cell.coord)
+                .expect("Atlas contains cells");
+            (event.id, coord)
+        })
+        .collect::<BTreeMap<_, _>>();
+
     for cell in &mut atlas.cells {
         let event_ids = history
             .events
             .iter()
-            .filter(|event| cell_at_position(cell.coord, cell_radius_m, event.location.xz()))
+            .filter(|event| event_cells.get(&event.id).copied() == Some(cell.coord))
             .map(|event| event.id)
             .collect::<Vec<_>>();
         let zones = history
@@ -384,7 +407,6 @@ pub fn apply_history_to_atlas(
     atlas.atlas_fingerprint = digest(atlas)?;
     Ok(())
 }
-
 fn dominant_economy(zones: &[&LandUseZone]) -> String {
     if zones.iter().any(|zone| zone.kind == LandUseKind::Harbor) {
         "maritime trade and fishery".into()

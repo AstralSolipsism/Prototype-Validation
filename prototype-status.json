@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-08-06",
+  "updated_at": "2026-08-08",
   "repository_role": "technical-preproduction",
   "stages": [
     {
@@ -40,19 +40,22 @@
     {
       "id": "P2",
       "name": "mobile-reference-frame-and-unified-interior-exterior",
-      "status": "implementation-in-progress",
-      "passed": false,
+      "status": "passed",
+      "passed": true,
       "evidence_present": [
-        "P2 acceptance specification",
-        "engine-independent mobile-region core authored",
-        "headless reference-frame trace authored",
-        "Bevy unified interior/exterior visual prototype authored"
+        "engine-independent mobile-region core",
+        "large-coordinate reference-frame trace",
+        "Bevy unified interior/exterior visual prototype",
+        "real window and single-camera visual validation",
+        "frame-transfer validation",
+        "manual GPU validation",
+        "manual result recorded in docs/evidence/p2-manual-gpu-validation-2026-08-08.md"
       ],
-      "evidence_missing": [
-        "P2 Rust and Bevy CI",
-        "P2 headless threshold report",
-        "P2 Windows validation package",
-        "P2 manual GPU validation"
+      "known_non_blocking_issues": [
+        "Issue #6 production occlusion fade and cutaway",
+        "formal vehicle physics and hydrodynamics",
+        "network replication and region authority",
+        "player vehicle construction"
       ]
     },
     {"id":"P3","status":"not-started","passed":false},

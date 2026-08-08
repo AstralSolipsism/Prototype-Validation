@@ -8,6 +8,7 @@ publish.workspace = true
 [dependencies]
 bevy.workspace = true
 building_core = { path = "../../crates/building_core" }
+glam.workspace = true
 p3_building_scenario = { path = "../../crates/p3_building_scenario" }
 p4_world_scenario = { path = "../../crates/p4_world_scenario" }
 scroll_camera_core = { path = "../../crates/scroll_camera_core" }

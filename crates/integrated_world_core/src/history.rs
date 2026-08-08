@@ -353,11 +353,12 @@ pub fn apply_history_to_atlas(
     atlas: &mut WorldAtlasManifest,
     history: &HistoryLedger,
 ) -> Result<(), serde_json::Error> {
+    let cell_radius_m = atlas.cell_radius_m;
     for cell in &mut atlas.cells {
         let event_ids = history
             .events
             .iter()
-            .filter(|event| cell_at_position(cell.coord, atlas.cell_radius_m, event.location.xz()))
+            .filter(|event| cell_at_position(cell.coord, cell_radius_m, event.location.xz()))
             .map(|event| event.id)
             .collect::<Vec<_>>();
         let zones = history

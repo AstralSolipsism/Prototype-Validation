@@ -242,7 +242,7 @@ fn accumulate_flow(width: usize, height: usize, samples: &mut [TerrainSample]) {
         let x = index % width;
         let z = index / width;
         let current_elevation = samples[index].world_position.y;
-        let mut downstream = None;
+        let mut downstream: Option<usize> = None;
         for dz in -1isize..=1 {
             for dx in -1isize..=1 {
                 if dx == 0 && dz == 0 {

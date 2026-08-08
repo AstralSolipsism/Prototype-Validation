@@ -4,8 +4,8 @@ use crate::model::*;
 use crate::terrain::{default_materialized_cells, materialize_region};
 use crate::traversal::{compile_traversal, validate_traversal};
 use std::collections::{BTreeMap, BTreeSet};
-use world_generation_core::{BoundaryKey, HexCoord, WorldManifest};
-use world_ids::{EntityId, EventId};
+use world_generation_core::{HexCoord, WorldManifest};
+use world_ids::EntityId;
 
 pub fn build_cross_scale_report(
     atlas: &WorldAtlasManifest,

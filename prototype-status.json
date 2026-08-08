@@ -86,28 +86,76 @@
     },
     {
       "id": "P4",
-      "name": "deterministic-world-generation",
+      "name": "layered-deterministic-world-generation",
       "status": "implementation-in-progress",
       "passed": false,
+      "sub_stages": [
+        {
+          "id": "P4A",
+          "name": "deterministic-atlas-skeleton-and-continuous-3d-projection",
+          "status": "passed",
+          "passed": true,
+          "issue": 11,
+          "pull_request": 12
+        },
+        {
+          "id": "P4B",
+          "name": "atlas-semantic-world-map-and-layer-boundary",
+          "status": "not-started",
+          "passed": false,
+          "issue": 13
+        },
+        {
+          "id": "P4C",
+          "name": "high-resolution-cell-geography-materialization",
+          "status": "not-started",
+          "passed": false,
+          "issue": 14
+        },
+        {
+          "id": "P4D",
+          "name": "geography-driven-human-history-and-settlement-morphology",
+          "status": "not-started",
+          "passed": false,
+          "issue": 15
+        },
+        {
+          "id": "P4E",
+          "name": "world-derived-traversal-scroll-routes-and-camera-corridors",
+          "status": "not-started",
+          "passed": false,
+          "issue": 16
+        },
+        {
+          "id": "P4F",
+          "name": "cross-scale-atlas-cell-scene-route-consistency",
+          "status": "not-started",
+          "passed": false,
+          "issue": 17
+        }
+      ],
       "evidence_present": [
-        "P4 acceptance specification in Issue #11",
-        "P4 prototype design document",
-        "hex topology primitives authored",
-        "versioned world manifest model authored",
-        "deterministic terrain, climate, hydrology, transport, settlement and route pipeline authored",
-        "world constraint validators authored",
-        "radius-two world scenario authored",
-        "P4 headless trace authored"
+        "P4 umbrella acceptance specification in Issue #11",
+        "P4A deterministic hex topology and shared boundary contracts",
+        "P4A versioned macro world manifest",
+        "P4A terrain, climate, hydrology, transport, settlement and route skeleton",
+        "P4A world constraint validators",
+        "P4A radius-two 19-cell world scenario",
+        "P4A traversal-order invariant headless trace",
+        "P4A continuous Bevy 3D projection",
+        "P4A Windows GPU validation package run 31251764378",
+        "P4A manual validation of continuity, unified identity and reachability"
       ],
       "evidence_missing": [
-        "P4 Rust CI",
-        "P4 headless world report",
-        "Bevy generated-world visual prototype",
-        "Windows GPU validation package",
-        "P4 manual GPU validation"
-      ]
+        "P4B independent Atlas semantic map with contours and thematic layers",
+        "P4C high-resolution intra-cell terrain and boundary-constrained materialization",
+        "P4D causal human history, settlement morphology and land-use generation",
+        "P4E traversal graph and scroll routes derived from detailed world facts",
+        "P4F cross-scale identity and round-trip consistency validation"
+      ],
+      "known_scope_correction": "The P4A visual is a low-sample continuous 3D projection, not the intended layered Atlas-to-cell-to-scene-to-scroll generation architecture."
     },
-    {"id":"P5","status":"not-started","passed":false},
+    {"id":"P5","status":"blocked-by-p4b-through-p4f","passed":false},
     {"id":"P6","status":"not-started","passed":false},
     {"id":"P7","status":"not-started","passed":false},
     {"id":"P8","status":"not-started","passed":false}

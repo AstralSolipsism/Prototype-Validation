@@ -137,3 +137,5 @@ jobs:
             artifacts/p4-integrated-world-trace.json
           if-no-files-found: warn
           retention-days: 7
+
+# Second revision deliberately triggers the registered workflow.

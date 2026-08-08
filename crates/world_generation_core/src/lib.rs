@@ -1,5 +1,9 @@
 #![forbid(unsafe_code)]
 
+#[allow(
+    clippy::collapsible_if,
+    reason = "the route grammar keeps existence and slope checks visually separate"
+)]
 mod generate;
 mod hex;
 mod model;

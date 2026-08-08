@@ -34,6 +34,8 @@ def main() -> int:
         "crates/p3_building_scenario",
         "crates/world_generation_core",
         "crates/p4_world_scenario",
+        "crates/integrated_world_core",
+        "crates/p4_integrated_scenario",
         "apps/camera_trace",
         "apps/camera_routes",
         "apps/p2_reference_frame_trace",
@@ -42,6 +44,7 @@ def main() -> int:
         "apps/building_visual",
         "apps/p4_world_trace",
         "apps/world_visual",
+        "apps/p4_integrated_trace",
     }
     assert required <= members, required - members
 
@@ -56,7 +59,7 @@ def main() -> int:
     assert stages["P3"]["passed"] is True
     assert stages["P3"]["status"] == "passed"
     assert stages["P4"]["passed"] is False
-    assert stages["P4"]["status"] == "implementation-in-progress"
+    assert stages["P4"]["status"] == "integrated-validation-in-progress"
     assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(5, 9))
 
     print("Workspace manifest and prototype status passed.")

@@ -158,26 +158,24 @@ fn generate_cell(config: WorldGenerationConfig, coord: HexCoord) -> CellDraft {
     let center_xz = coord.center_xz(config.cell_radius_m);
 
     let elevation_m = if coord.q == config.radius {
-        -42.0 - elevation_noise * 18.0
+        -12.0 - elevation_noise * 6.0
+    } else if coord.q == config.radius - 1 {
+        32.0 + (elevation_noise - 0.5) * 8.0
     } else {
-        let inland_steps = f64::from(config.radius - coord.q - 1).max(0.0);
-        let coastal_gradient = 34.0 + inland_steps * 145.0;
+        let inland_steps = f64::from(config.radius - coord.q - 1).max(1.0);
+        let coastal_gradient = 32.0 + inland_steps * 30.0;
         let ridge_axis = f64::from(coord.r) + f64::from(coord.q) * 0.35;
-        let ridge = if coord.q <= 0 {
-            285.0 * (-0.72 * ridge_axis * ridge_axis).exp()
-        } else {
-            0.0
-        };
-        coastal_gradient + ridge + (elevation_noise - 0.5) * 24.0
+        let ridge = 45.0 * (-0.72 * ridge_axis * ridge_axis).exp();
+        coastal_gradient + ridge + (elevation_noise - 0.5) * 8.0
     };
 
     let surface = if coord.q == config.radius {
         SurfaceClass::Ocean
     } else if coord.q == config.radius - 1 {
         SurfaceClass::Coast
-    } else if elevation_m >= 650.0 {
+    } else if elevation_m >= 155.0 {
         SurfaceClass::Alpine
-    } else if elevation_m >= 420.0 {
+    } else if elevation_m >= 105.0 {
         SurfaceClass::Highland
     } else {
         SurfaceClass::Lowland
@@ -201,9 +199,9 @@ fn generate_cell(config: WorldGenerationConfig, coord: HexCoord) -> CellDraft {
     let travel_cost = match surface {
         SurfaceClass::Ocean => 12.0,
         SurfaceClass::Coast => 1.15,
-        SurfaceClass::Lowland => 1.0 + elevation_m.max(0.0) / 1_200.0,
-        SurfaceClass::Highland => 1.8 + elevation_m / 1_000.0,
-        SurfaceClass::Alpine => 3.0 + elevation_m / 800.0,
+        SurfaceClass::Lowland => 1.0 + elevation_m.max(0.0) / 1_000.0,
+        SurfaceClass::Highland => 1.5 + elevation_m / 600.0,
+        SurfaceClass::Alpine => 2.2 + elevation_m / 500.0,
     };
 
     CellDraft {
@@ -385,7 +383,7 @@ fn generate_roads(
     ];
     let mut roads = Vec::new();
     for (index, (purpose, start)) in specs.into_iter().enumerate() {
-        let cells = greedy_land_path(start, port_cell, coord_set, drafts).ok_or(
+        let cells = slope_aware_land_path(start, port_cell, coord_set, drafts).ok_or(
             WorldGenerationError::MissingRoadPath {
                 start,
                 end: port_cell,
@@ -407,39 +405,66 @@ fn generate_roads(
     Ok(roads)
 }
 
-fn greedy_land_path(
+fn slope_aware_land_path(
     start: HexCoord,
     end: HexCoord,
     coord_set: &BTreeSet<HexCoord>,
     drafts: &BTreeMap<HexCoord, CellDraft>,
 ) -> Option<Vec<HexCoord>> {
-    let mut current = start;
-    let mut path = vec![current];
-    let mut visited = BTreeSet::from([current]);
-    while current != end {
-        let current_distance = current.distance(end);
-        let next = HexDirection::ALL
-            .into_iter()
-            .map(|direction| current.neighbor(direction))
-            .filter(|neighbor| coord_set.contains(neighbor))
-            .filter(|neighbor| !drafts[neighbor].is_ocean())
-            .filter(|neighbor| neighbor.distance(end) < current_distance)
-            .min_by(|left, right| {
-                left.distance(end)
-                    .cmp(&right.distance(end))
-                    .then_with(|| {
-                        drafts[left]
-                            .travel_cost
-                            .total_cmp(&drafts[right].travel_cost)
-                    })
-                    .then_with(|| left.cmp(right))
-            })?;
-        if !visited.insert(next) {
-            return None;
+    let mut frontier = BTreeSet::from([start]);
+    let mut costs = BTreeMap::from([(start, 0.0_f64)]);
+    let mut previous = BTreeMap::<HexCoord, HexCoord>::new();
+
+    while !frontier.is_empty() {
+        let current = *frontier.iter().min_by(|left, right| {
+            costs[*left]
+                .total_cmp(&costs[*right])
+                .then_with(|| left.cmp(right))
+        })?;
+        frontier.remove(&current);
+        if current == end {
+            break;
         }
-        path.push(next);
-        current = next;
+
+        for direction in HexDirection::ALL {
+            let neighbor = current.neighbor(direction);
+            if !coord_set.contains(&neighbor) || drafts[&neighbor].is_ocean() {
+                continue;
+            }
+
+            let horizontal_distance = drafts[&current]
+                .center_xz
+                .distance(drafts[&neighbor].center_xz)
+                .max(1.0);
+            let grade = (drafts[&current].elevation_m - drafts[&neighbor].elevation_m).abs()
+                / horizontal_distance;
+            let edge_cost = 1.0 + drafts[&neighbor].travel_cost * 0.15 + grade.powi(2) * 60.0;
+            let candidate_cost = costs[&current] + edge_cost;
+            let incumbent = costs.get(&neighbor).copied().unwrap_or(f64::INFINITY);
+            let predecessor_is_better = previous
+                .get(&neighbor)
+                .is_none_or(|incumbent_predecessor| current < *incumbent_predecessor);
+
+            if candidate_cost < incumbent - 1.0e-12
+                || ((candidate_cost - incumbent).abs() <= 1.0e-12 && predecessor_is_better)
+            {
+                costs.insert(neighbor, candidate_cost);
+                previous.insert(neighbor, current);
+                frontier.insert(neighbor);
+            }
+        }
     }
+
+    if !costs.contains_key(&end) {
+        return None;
+    }
+    let mut path = vec![end];
+    let mut current = end;
+    while current != start {
+        current = *previous.get(&current)?;
+        path.push(current);
+    }
+    path.reverse();
     Some(path)
 }
 
@@ -548,7 +573,7 @@ fn center_grammar(
         return ScrollGrammar::VistaReveal;
     }
     if let Some(next) = cells.get(index + 1).copied() {
-        if (drafts[&coord].elevation_m - drafts[&next].elevation_m).abs() >= 70.0 {
+        if (drafts[&coord].elevation_m - drafts[&next].elevation_m).abs() >= 28.0 {
             return ScrollGrammar::VerticalTransition;
         }
     }

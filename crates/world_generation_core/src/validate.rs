@@ -8,6 +8,7 @@ use thiserror::Error;
 use world_ids::{BuildingInstanceId, CellId, PortalId, RoadId, RouteId};
 
 const EPSILON: f64 = 1.0e-8;
+const MAX_ROAD_GRADE: f64 = 0.25;
 
 #[derive(Clone, Debug, PartialEq, Error)]
 pub enum WorldValidationError {
@@ -46,6 +47,13 @@ pub enum WorldValidationError {
     MissingCoastline(BoundaryKey),
     #[error("road {0} is empty, disconnected, enters ocean, or misses the settlement")]
     InvalidRoad(RoadId),
+    #[error("road {road_id} exceeds the maximum grade between {left:?} and {right:?}: {grade:.3}")]
+    ExcessiveRoadGrade {
+        road_id: RoadId,
+        left: HexCoord,
+        right: HexCoord,
+        grade: f64,
+    },
     #[error("route {0} is empty, disconnected, or inconsistent with its road")]
     InvalidRoute(RouteId),
     #[error("required scroll grammar {0:?} is absent")]
@@ -337,6 +345,23 @@ fn validate_settlement_roads_routes(
                 .any(|coord| coords.get(coord).is_none_or(|cell| cell.is_ocean()))
         {
             errors.push(WorldValidationError::InvalidRoad(road.id));
+        }
+        for pair in road.cells.windows(2) {
+            let (Some(left), Some(right)) = (coords.get(&pair[0]), coords.get(&pair[1])) else {
+                continue;
+            };
+            let delta_x = left.center_world.x - right.center_world.x;
+            let delta_z = left.center_world.z - right.center_world.z;
+            let horizontal_distance = delta_x.hypot(delta_z).max(1.0);
+            let grade = (left.elevation_m - right.elevation_m).abs() / horizontal_distance;
+            if grade > MAX_ROAD_GRADE + EPSILON {
+                errors.push(WorldValidationError::ExcessiveRoadGrade {
+                    road_id: road.id,
+                    left: pair[0],
+                    right: pair[1],
+                    grade,
+                });
+            }
         }
     }
 

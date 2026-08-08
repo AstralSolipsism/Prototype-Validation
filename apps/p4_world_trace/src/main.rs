@@ -24,6 +24,7 @@ struct WorldTraceReport {
     river_boundary_count: usize,
     coastline_boundary_count: usize,
     road_count: usize,
+    maximum_road_grade: f64,
     route_count: usize,
     route_node_count: usize,
     portal_count: usize,
@@ -70,6 +71,20 @@ fn main() -> Result<(), Box<dyn Error>> {
             .all(|reason| settlement.reasons.contains(reason))
     });
 
+    let maximum_road_grade = manifest
+        .roads
+        .iter()
+        .flat_map(|road| road.cells.windows(2))
+        .filter_map(|pair| {
+            let left = manifest.cell(pair[0])?;
+            let right = manifest.cell(pair[1])?;
+            let delta_x = left.center_world.x - right.center_world.x;
+            let delta_z = left.center_world.z - right.center_world.z;
+            let horizontal_distance = delta_x.hypot(delta_z).max(1.0);
+            Some((left.elevation_m - right.elevation_m).abs() / horizontal_distance)
+        })
+        .fold(0.0_f64, f64::max);
+
     let all_routes_reference_same_landmark = manifest.landmarks.len() == 1
         && manifest
             .routes
@@ -102,6 +117,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         && manifest.cells.len() == 19
         && manifest.river.cells.len() >= 4
         && manifest.roads.len() == 3
+        && maximum_road_grade <= 0.25
         && manifest.routes.len() == 3
         && manifest.settlements.len() == 1
         && building_count >= 6
@@ -123,6 +139,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         river_boundary_count: manifest.river.boundaries.len(),
         coastline_boundary_count: manifest.coastline.len(),
         road_count: manifest.roads.len(),
+        maximum_road_grade,
         route_count: manifest.routes.len(),
         route_node_count: manifest.routes.iter().map(|route| route.nodes.len()).sum(),
         portal_count: manifest.portals.len(),

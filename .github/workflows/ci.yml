@@ -4,15 +4,16 @@ on:
   push:
     branches:
       - agent/p4-integrated-world-pipeline
-  pull_request:
+    paths-ignore:
+      - docs/evidence/p4-integrated-final-gate.md
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: p4-integrated-final-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: false
+  group: p4-integrated-final-gate
+  cancel-in-progress: true
 
 env:
   INTEGRATED_BRANCH: agent/p4-integrated-world-pipeline
@@ -81,12 +82,15 @@ jobs:
     needs: finalize
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    outputs:
+      gate_status: ${{ steps.gate.outputs.status }}
 
     steps:
       - name: Checkout finalized integrated branch
         uses: actions/checkout@v4
         with:
           ref: ${{ env.INTEGRATED_BRANCH }}
+          fetch-depth: 0
 
       - name: Install Bevy Linux build dependencies
         run: |
@@ -110,46 +114,94 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
 
-      - name: Run static preproduction checks
-        run: ./scripts/run_static_checks.sh
-
-      - name: Check formatting
-        run: cargo fmt --all -- --check
-
-      - name: Require committed dependency lockfile
-        shell: bash
-        run: test -f Cargo.lock
-
-      - name: Check complete workspace including Bevy applications
-        run: cargo check --workspace --all-targets --locked
-
-      - name: Run strict Clippy across complete workspace
-        run: cargo clippy --workspace --all-targets --locked -- -D warnings
-
-      - name: Test engine-independent crates and headless applications
-        run: >-
-          cargo test --workspace
-          --exclude camera_routes
-          --exclude mobile_region_visual
-          --exclude building_visual
-          --exclude world_visual
-          --exclude integrated_world_visual
-          --all-targets --locked
-
-      - name: Generate deterministic headless evidence
+      - name: Run complete automated gate and retain diagnostics
+        id: gate
         shell: bash
         run: |
-          mkdir -p artifacts
-          cargo run --locked -p camera_trace -- artifacts/p1-camera-trace.json
-          cargo run --locked -p p2_reference_frame_trace -- artifacts/p2-reference-frame-trace.json
-          cargo run --locked -p p3_building_trace -- artifacts/p3-building-trace.json
-          cargo run --locked -p p4_world_trace -- artifacts/p4-world-trace.json
-          cargo run --locked -p p4_integrated_trace -- artifacts/p4-integrated-world-trace.json
+          set +e
+          mkdir -p artifacts docs/evidence
+          (
+            set -euo pipefail
+            echo '## Static preproduction checks'
+            ./scripts/run_static_checks.sh
+            echo '## Formatting'
+            cargo fmt --all -- --check
+            echo '## Dependency lockfile'
+            test -f Cargo.lock
+            echo '## Complete workspace cargo check'
+            cargo check --workspace --all-targets --locked
+            echo '## Complete workspace strict Clippy'
+            cargo clippy --workspace --all-targets --locked -- -D warnings
+            echo '## Engine-independent tests and headless applications'
+            cargo test --workspace \
+              --exclude camera_routes \
+              --exclude mobile_region_visual \
+              --exclude building_visual \
+              --exclude world_visual \
+              --exclude integrated_world_visual \
+              --all-targets --locked
+            echo '## P1 headless evidence'
+            cargo run --locked -p camera_trace -- artifacts/p1-camera-trace.json
+            echo '## P2 headless evidence'
+            cargo run --locked -p p2_reference_frame_trace -- artifacts/p2-reference-frame-trace.json
+            echo '## P3 headless evidence'
+            cargo run --locked -p p3_building_trace -- artifacts/p3-building-trace.json
+            echo '## P4A headless evidence'
+            cargo run --locked -p p4_world_trace -- artifacts/p4-world-trace.json
+            echo '## Integrated P4 headless evidence'
+            cargo run --locked -p p4_integrated_trace -- artifacts/p4-integrated-world-trace.json
+            echo '## Integrated Bevy Linux build'
+            cargo build --locked -p integrated_world_visual
+          ) 2>&1 | tee artifacts/p4-integrated-final-gate.log
+          status=${PIPESTATUS[0]}
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
 
-      - name: Build integrated Bevy visual application on Linux
-        run: cargo build --locked -p integrated_world_visual
+          if [ "$status" -eq 0 ]; then
+            result=PASS
+          else
+            result=FAIL
+          fi
 
-      - name: Upload automated evidence
+          {
+            echo '# P4 integrated final automated gate'
+            echo
+            echo "Result: **${result}**"
+            echo
+            echo "Workflow run: ${GITHUB_RUN_ID}"
+            echo "Validated source: ${{ needs.finalize.outputs.source_sha }}"
+            echo "Branch: ${INTEGRATED_BRANCH}"
+            echo
+            if [ "$status" -eq 0 ]; then
+              echo '## Passed gates'
+              echo
+              echo '- static architecture and prototype-state checks'
+              echo '- formatting and committed dependency lockfile'
+              echo '- complete workspace compilation including Bevy applications'
+              echo '- complete workspace strict Clippy'
+              echo '- engine-independent unit and integration tests'
+              echo '- P1, P2, P3, P4A and integrated P4 deterministic traces'
+              echo '- integrated Bevy visual application Linux build'
+              echo
+              echo 'The Windows x64 package job may now run from the same workflow.'
+            else
+              echo '## Failure summary'
+              echo
+              echo '```text'
+              grep -E 'error(\[E[0-9]+\])?:|panicked at|FAILED|failed checks|Validation\(' \
+                artifacts/p4-integrated-final-gate.log | tail -n 180 || true
+              echo '```'
+              echo
+              echo '## Diagnostic tail'
+              echo
+              echo '```text'
+              tail -n 240 artifacts/p4-integrated-final-gate.log
+              echo '```'
+            fi
+          } > docs/evidence/p4-integrated-final-gate.md
+          exit 0
+
+      - name: Upload automated evidence and diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: p4-integrated-automated-evidence
@@ -159,14 +211,44 @@ jobs:
             artifacts/p3-building-trace.json
             artifacts/p4-world-trace.json
             artifacts/p4-integrated-world-trace.json
-          if-no-files-found: error
+            artifacts/p4-integrated-final-gate.log
+            docs/evidence/p4-integrated-final-gate.md
+          if-no-files-found: warn
           retention-days: 30
+
+      - name: Persist gate result on the integrated branch
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/evidence/p4-integrated-final-gate.md
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Record integrated P4 final gate result"
+          for attempt in 1 2 3 4; do
+            if git push origin "HEAD:${INTEGRATED_BRANCH}"; then
+              break
+            fi
+            if [ "$attempt" -eq 4 ]; then
+              exit 1
+            fi
+            git fetch origin "${INTEGRATED_BRANCH}"
+            git rebase "origin/${INTEGRATED_BRANCH}"
+          done
+
+      - name: Fail after diagnostics are persisted
+        if: steps.gate.outputs.status != '0'
+        run: exit 1
 
   package:
     name: Windows x64 final manual acceptance package
     needs:
       - finalize
       - validate
+    if: needs.validate.outputs.gate_status == '0'
     runs-on: windows-latest
     timeout-minutes: 90
 
@@ -200,7 +282,11 @@ jobs:
           Copy-Item target/debug/integrated_world_visual.exe dist/integrated_world_visual.exe
           Copy-Item docs/visual-acceptance/p4-integrated-checklist.md dist/p4-integrated-checklist.md
           Copy-Item scripts/collect_p4_integrated_machine_info.ps1 dist/collect_p4_integrated_machine_info.ps1
-          Copy-Item evidence/p4-integrated-world-trace.json dist/p4-integrated-world-trace.json
+          $trace = Get-ChildItem evidence -Recurse -Filter p4-integrated-world-trace.json | Select-Object -First 1
+          if ($null -eq $trace) {
+            throw 'Integrated P4 trace was not found in downloaded evidence.'
+          }
+          Copy-Item $trace.FullName dist/p4-integrated-world-trace.json
           @"
           # P4 Atlas 到卷轴世界综合人工验收包
 

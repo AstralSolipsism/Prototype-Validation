@@ -1,0 +1,15 @@
+[package]
+name = "world_generation_core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+deterministic_rng = { path = "../deterministic_rng" }
+glam.workspace = true
+scroll_camera_core = { path = "../scroll_camera_core" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+world_ids = { path = "../world_ids" }

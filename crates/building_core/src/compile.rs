@@ -3,7 +3,7 @@ use crate::validate::{BuildingError, ValidationReport, index_blueprint, validate
 use glam::{DVec2, DVec3};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use thiserror::Error;
-use world_ids::{BuildingLevelId, OpeningId, RoomId, WallId};
+use world_ids::RoomId;
 
 const FNV_OFFSET_BASIS: u64 = 0xcbf2_9ce4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;

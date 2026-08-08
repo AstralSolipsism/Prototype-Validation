@@ -110,7 +110,6 @@ impl StdError for ValidationReport {}
 
 pub(crate) struct BlueprintIndex<'a> {
     pub levels: BTreeMap<BuildingLevelId, &'a BuildingLevel>,
-    pub level_indices: BTreeMap<i16, BuildingLevelId>,
     pub rooms: BTreeMap<RoomId, (&'a Room, BuildingLevelId)>,
     pub walls: BTreeMap<WallId, &'a WallRun>,
     pub openings: BTreeMap<OpeningId, &'a Opening>,
@@ -118,14 +117,12 @@ pub(crate) struct BlueprintIndex<'a> {
 
 pub(crate) fn index_blueprint(blueprint: &BuildingBlueprint) -> BlueprintIndex<'_> {
     let mut levels = BTreeMap::new();
-    let mut level_indices = BTreeMap::new();
     let mut rooms = BTreeMap::new();
     let mut walls = BTreeMap::new();
     let mut openings = BTreeMap::new();
 
     for level in &blueprint.levels {
         levels.entry(level.id).or_insert(level);
-        level_indices.entry(level.index).or_insert(level.id);
         for room in &level.rooms {
             rooms.entry(room.id).or_insert((room, level.id));
         }
@@ -139,7 +136,6 @@ pub(crate) fn index_blueprint(blueprint: &BuildingBlueprint) -> BlueprintIndex<'
 
     BlueprintIndex {
         levels,
-        level_indices,
         rooms,
         walls,
         openings,

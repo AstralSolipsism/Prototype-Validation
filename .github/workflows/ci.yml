@@ -8,7 +8,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -23,8 +23,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'push' && github.ref_name || github.sha }}
 
       - name: Apply integrated P4 source cleanup in the CI worktree
         if: github.ref_name == 'agent/p4-integrated-world-pipeline' || github.head_ref == 'agent/p4-integrated-world-pipeline'
@@ -72,8 +70,6 @@ jobs:
               1,
           )
           traversal.write_text(text, encoding="utf-8")
-
-          Path(".github/workflows/p4-integrated-clippy-fix.yml").unlink(missing_ok=True)
 
       - name: Install Bevy Linux build dependencies
         run: |
@@ -165,21 +161,6 @@ jobs:
         run: >-
           cargo run --locked -p p4_integrated_trace --
           artifacts/p4-integrated-world-trace.json
-
-      - name: Commit integrated source cleanup after all gates pass
-        if: success() && github.event_name == 'push' && github.ref_name == 'agent/p4-integrated-world-pipeline'
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "Integrated source cleanup is already committed."
-            exit 0
-          fi
-          git commit -m "Clean integrated P4 sources after green gates"
-          git pull --rebase origin agent/p4-integrated-world-pipeline
-          git push origin HEAD:agent/p4-integrated-world-pipeline
 
       - name: Upload dependency lockfile
         if: always()

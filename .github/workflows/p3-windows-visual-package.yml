@@ -1,0 +1,101 @@
+name: p3-windows-visual-package
+
+on:
+  push:
+    branches:
+      - "agent/p3-**"
+    paths:
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+      - "apps/building_visual/**"
+      - "crates/building_core/**"
+      - "crates/p3_building_scenario/**"
+      - "crates/world_ids/**"
+      - "docs/visual-acceptance/p3-checklist.md"
+      - "scripts/collect_p3_machine_info.ps1"
+      - .github/workflows/p3-windows-visual-package.yml
+  pull_request:
+    paths:
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+      - "apps/building_visual/**"
+      - "crates/building_core/**"
+      - "crates/p3_building_scenario/**"
+      - "crates/world_ids/**"
+      - "docs/visual-acceptance/p3-checklist.md"
+      - "scripts/collect_p3_machine_info.ps1"
+      - .github/workflows/p3-windows-visual-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p3-windows-visual-package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Windows x64 P3 validation package
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.97.1
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Require committed dependency lockfile
+        shell: pwsh
+        run: |
+          if (-not (Test-Path Cargo.lock)) {
+            throw "Cargo.lock is missing."
+          }
+
+      - name: Build P3 visual prototype
+        run: cargo build --locked --release -p building_visual
+
+      - name: Assemble validation package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item target/release/building_visual.exe dist/building_visual.exe
+          Copy-Item docs/visual-acceptance/p3-checklist.md dist/p3-checklist.md
+          Copy-Item scripts/collect_p3_machine_info.ps1 dist/collect_p3_machine_info.ps1
+          @"
+          # P3 Windows 视觉验证包
+
+          1. 运行环境采集：
+             powershell -ExecutionPolicy Bypass -File .\collect_p3_machine_info.ps1
+          2. 启动原型：
+             .\building_visual.exe
+          3. 按 p3-checklist.md 完成录像和检查。
+
+          操作：
+          - M：完整结构 / 外部壳体 / Massing
+          - X：切换北、东、南、西、屋顶剖视和无剖视
+          - W：新增或移除指定展示窗
+          - O：暂停或继续移动平台
+          - A / D 或左右方向键：环绕观察
+          - 上下方向键：调整摄影机高度
+          - R：重置
+
+          左侧建筑绑定静态世界参考系，右侧相同蓝图绑定移动平台参考系。本程序只验证语义建筑同源编译、剖视和局部修改，不代表最终美术或正式建造系统。
+          "@ | Set-Content -Encoding UTF8 dist/RUN.md
+
+      - name: Upload validated Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: p3-semantic-building-windows-x64
+          path: dist
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,52 @@
+name: p4-geography-refinement
+
+on:
+  push:
+    branches:
+      - agent/p4-deterministic-world-generation
+    paths:
+      - .github/workflows/p4-geography-refinement.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p4-geography-refinement-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  refine:
+    name: refine P4 terrain gradient and road routing
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout P4 source branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/p4-deterministic-world-generation
+
+      - name: Apply deterministic geography refinement
+        run: python scripts/apply_p4_geography_refinement.py
+
+      - name: Install Rustfmt
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.97.1
+          components: rustfmt
+
+      - name: Apply rustfmt
+        run: cargo fmt --all
+
+      - name: Commit refined geography
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm scripts/apply_p4_geography_refinement.py
+          git add \
+            crates/world_generation_core/src/generate.rs \
+            crates/world_generation_core/src/validate.rs \
+            apps/p4_world_trace/src/main.rs
+          git commit -m "Refine P4 terrain gradient and road grades"
+          git push origin HEAD:agent/p4-deterministic-world-generation

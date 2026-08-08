@@ -8,84 +8,13 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  integrated-autofix:
-    name: temporary integrated P4 source autofix
-    if: >-
-      (github.event_name == 'push' && github.ref == 'refs/heads/agent/p4-integrated-world-pipeline') ||
-      (github.event_name == 'pull_request' && github.head_ref == 'agent/p4-integrated-world-pipeline')
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout integrated branch
-        uses: actions/checkout@v4
-        with:
-          ref: agent/p4-integrated-world-pipeline
-
-      - name: Apply known first compile fixes
-        shell: python
-        run: |
-          from pathlib import Path
-
-          terrain = Path("crates/integrated_world_core/src/terrain.rs")
-          text = terrain.read_text(encoding="utf-8")
-          text = text.replace(
-              "        let mut downstream = None;\n",
-              "        let mut downstream: Option<usize> = None;\n",
-          )
-          terrain.write_text(text, encoding="utf-8")
-
-          history = Path("crates/integrated_world_core/src/history.rs")
-          text = history.read_text(encoding="utf-8")
-          anchor = "pub fn apply_history_to_atlas(\n    atlas: &mut WorldAtlasManifest,\n    history: &HistoryLedger,\n) -> Result<(), serde_json::Error> {\n"
-          if "let cell_radius_m = atlas.cell_radius_m;" not in text:
-              text = text.replace(anchor, anchor + "    let cell_radius_m = atlas.cell_radius_m;\n", 1)
-          text = text.replace(
-              "cell_at_position(cell.coord, atlas.cell_radius_m, event.location.xz())",
-              "cell_at_position(cell.coord, cell_radius_m, event.location.xz())",
-          )
-          history.write_text(text, encoding="utf-8")
-
-          validate = Path("crates/integrated_world_core/src/validate.rs")
-          text = validate.read_text(encoding="utf-8")
-          text = text.replace(
-              "use world_generation_core::{BoundaryKey, HexCoord, WorldManifest};",
-              "use world_generation_core::{HexCoord, WorldManifest};",
-          )
-          text = text.replace(
-              "use world_ids::{EntityId, EventId};",
-              "use world_ids::EntityId;",
-          )
-          validate.write_text(text, encoding="utf-8")
-
-          Path(".github/workflows/p4-integrated-first-compile-fix.yml").unlink(missing_ok=True)
-
-      - name: Install Rustfmt
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.97.1
-          components: rustfmt
-
-      - name: Format and commit when changed
-        shell: bash
-        run: |
-          cargo fmt --all
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No integrated autofix changes remain."
-            exit 0
-          fi
-          git commit -m "Fix initial integrated P4 compile errors"
-          git push origin HEAD:agent/p4-integrated-world-pipeline
-
   validate:
     name: architecture, rust, headless prototype
     runs-on: ubuntu-latest

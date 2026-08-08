@@ -4,8 +4,9 @@ on:
   push:
     branches:
       - agent/p4-integrated-world-pipeline
-    paths:
-      - .github/workflows/dev-source-snapshot.yml
+  pull_request:
+    branches:
+      - agent/p4-deterministic-world-generation
   workflow_dispatch:
 
 permissions:

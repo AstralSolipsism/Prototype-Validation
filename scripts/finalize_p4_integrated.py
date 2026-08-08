@@ -5,7 +5,6 @@ import re
 from pathlib import Path
 
 from finalize_p4_engineered_routes import main as finalize_engineered_routes
-from finalize_p4_generation_constraints import main as finalize_generation_constraints
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -74,12 +73,20 @@ def normalize_visual_source() -> None:
 def validate_persisted_core_fixes() -> None:
     atlas = (ROOT / "crates/integrated_world_core/src/atlas.rs").read_text(encoding="utf-8")
     history = (ROOT / "crates/integrated_world_core/src/history.rs").read_text(encoding="utf-8")
+    terrain = (ROOT / "crates/integrated_world_core/src/terrain.rs").read_text(encoding="utf-8")
     traversal = (ROOT / "crates/integrated_world_core/src/traversal.rs").read_text(
+        encoding="utf-8"
+    )
+    validation = (ROOT / "crates/integrated_world_core/src/validate.rs").read_text(
         encoding="utf-8"
     )
     required = {
         "Atlas swizzle trait": "Vec3Swizzles" in atlas,
         "history deterministic cell assignment": "let event_cells = history" in history,
+        "river local-minimum classification": "let near_local_minimum" in terrain,
+        "dense traversal path": "fn simplify_path(_grid: &TerrainGrid" in traversal,
+        "engineered traversal cost": "let grade_penalty" in traversal,
+        "river diagnostic offsets": "let river_height_offsets" in validation,
         "traversal lifetime elision": "fn nearest_sample(grid: &TerrainGrid" in traversal,
     }
     failed = [name for name, passed in required.items() if not passed]
@@ -100,7 +107,6 @@ def remove_temporary_lint_allowance() -> None:
 
 def main() -> int:
     validate_persisted_core_fixes()
-    finalize_generation_constraints()
     finalize_engineered_routes()
     normalize_visual_source()
     remove_temporary_lint_allowance()

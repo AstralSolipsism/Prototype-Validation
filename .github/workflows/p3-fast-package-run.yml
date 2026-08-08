@@ -1,5 +1,6 @@
 name: p3-fast-package-run
 
+# This second branch update intentionally triggers the workflow after the file exists.
 on:
   push:
     branches:
@@ -77,5 +78,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/evidence/p3-fast-package-ready.md
-          git commit -m "Record P3 Windows validation package" 
+          git commit -m "Record P3 Windows validation package"
           git push origin HEAD:agent/p3-fast-package

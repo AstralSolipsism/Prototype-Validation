@@ -58,7 +58,28 @@
         "player vehicle construction"
       ]
     },
-    {"id":"P3","status":"not-started","passed":false},
+    {
+      "id": "P3",
+      "name": "semantic-building-compiler",
+      "status": "implementation-in-progress",
+      "passed": false,
+      "evidence_present": [
+        "P3 acceptance specification in Issue #9",
+        "engine-independent building blueprint model authored",
+        "structured validation authored",
+        "derived room, portal, collision, navigation, chunk, cutaway and massing compilation authored",
+        "incremental dirty-set planning authored",
+        "deterministic two-storey building scenario authored",
+        "headless building trace authored"
+      ],
+      "evidence_missing": [
+        "P3 Rust CI",
+        "P3 headless building report",
+        "Bevy building visual prototype",
+        "Windows GPU validation package",
+        "P3 manual GPU validation"
+      ]
+    },
     {"id":"P4","status":"not-started","passed":false},
     {"id":"P5","status":"not-started","passed":false},
     {"id":"P6","status":"not-started","passed":false},

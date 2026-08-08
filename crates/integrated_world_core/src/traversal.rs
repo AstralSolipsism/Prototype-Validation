@@ -1,6 +1,6 @@
 use crate::atlas::{digest, stable_entity};
 use crate::model::*;
-use glam::{DVec2, DVec3};
+use glam::{DVec2, DVec3, Vec3Swizzles};
 use scroll_camera_core::ScrollGrammar;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap};

@@ -1,6 +1,6 @@
 use crate::model::*;
 use deterministic_rng::SeedMaterial;
-use glam::{DVec2, DVec3};
+use glam::{DVec2, DVec3, Vec3Swizzles};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::f64::consts::PI;

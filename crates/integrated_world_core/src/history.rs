@@ -1,6 +1,6 @@
 use crate::atlas::{digest, river_center_z, stable_entity};
 use crate::model::*;
-use glam::{DVec2, DVec3};
+use glam::{DVec2, DVec3, Vec3Swizzles};
 use std::collections::BTreeSet;
 use world_generation_core::{HexCoord, WorldManifest};
 use world_ids::{EntityId, EventId, RegionId};

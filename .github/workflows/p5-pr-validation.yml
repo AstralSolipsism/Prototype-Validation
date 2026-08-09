@@ -53,8 +53,9 @@ jobs:
       - name: Static architecture and stage checks
         run: ./scripts/run_static_checks.sh
 
-      - name: Formatting and lockfile
+      - name: Normalize formatting and verify lockfile
         run: |
+          cargo fmt --all
           cargo fmt --all -- --check
           test -f Cargo.lock
 

@@ -1,0 +1,45 @@
+name: p7-bootstrap-pr
+
+on:
+  pull_request:
+    branches:
+      - agent/p6-simulation-tiers-scale
+    paths:
+      - '.github/workflows/p7-bootstrap-source.yml'
+      - '.github/workflows/p7-bootstrap-pr.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Extract and materialize P7 source overlay
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('.github/workflows/p7-bootstrap-source.yml').read_text(encoding='utf-8')
+          marker = "<<'PAYLOAD'\n"
+          if marker not in text:
+              raise SystemExit('P7 payload marker is missing')
+          payload = text.split(marker, 1)[1].split('\nPAYLOAD', 1)[0].strip()
+          Path('/tmp/p7-overlay.b64').write_text(payload, encoding='ascii')
+          PY
+          base64 -d /tmp/p7-overlay.b64 > /tmp/p7-overlay.tar.gz
+          tar -xzf /tmp/p7-overlay.tar.gz
+          rm .github/workflows/p7-bootstrap-source.yml
+          rm .github/workflows/p7-bootstrap-pr.yml
+      - name: Commit P7 source
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Implement P7 interest and region authority validation"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}

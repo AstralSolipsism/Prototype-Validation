@@ -71,8 +71,8 @@
     {
       "id": "P4",
       "name": "integrated-atlas-to-scroll-world-generation",
-      "status": "awaiting-region-scale-manual-validation",
-      "passed": false,
+      "status": "passed",
+      "passed": true,
       "issue": 11,
       "pull_request": 18,
       "sub_stages": [
@@ -87,84 +87,72 @@
         {
           "id": "WP-B",
           "name": "atlas-semantic-world-map",
-          "status": "implemented-awaiting-final-combined-verdict",
-          "passed": false,
+          "status": "passed",
+          "passed": true,
           "issue": 13
         },
         {
           "id": "WP-C",
           "name": "high-resolution-cell-geography-materialization",
-          "status": "region-scale-automated-rework-passed-awaiting-manual",
-          "passed": false,
-          "issue": 14,
-          "blocking_issue": 21
+          "status": "passed",
+          "passed": true,
+          "issue": 14
         },
         {
           "id": "WP-D",
           "name": "geography-driven-human-history-and-land-use",
-          "status": "implemented-and-previously-manually-accepted-awaiting-final-combined-verdict",
-          "passed": false,
+          "status": "passed",
+          "passed": true,
           "issue": 15
         },
         {
           "id": "WP-E",
           "name": "world-derived-traversal-and-scroll-view",
-          "status": "surface-and-bridge-automated-rework-passed-awaiting-manual",
-          "passed": false,
-          "issue": 16,
-          "blocking_issue": 23
+          "status": "passed",
+          "passed": true,
+          "issue": 16
         },
         {
           "id": "WP-F",
           "name": "cross-scale-consistency",
-          "status": "corrected-automated-gate-passed-awaiting-manual",
-          "passed": false,
-          "issue": 17,
-          "blocking_issues": [
-            21,
-            22,
-            23
-          ]
+          "status": "passed",
+          "passed": true,
+          "issue": 17
         }
       ],
       "evidence_present": [
-        "previous integrated Atlas, history, identity and camera validation",
-        "manual failure recorded in docs/evidence/p4-integrated-manual-gpu-validation-2026-08-09.md",
-        "region-scale AtlasCell model with 4 km flat-to-flat diameter",
-        "250 m TerrainTile manifests separated from AtlasCell identity",
+        "P4A macro atlas skeleton, stable identities and shared boundaries",
+        "independent Atlas semantic map and regional materialization model",
+        "4 km AtlasCell separated from 250 m TerrainTile units",
         "selected-cell 97x97 full materialization plus up to six 17x17 neighbor proxies",
         "independent materialization IDs and deterministic cache rebuild",
         "shared-boundary height error below 2e-12 m",
+        "geography-driven history, land use and settlement layout",
         "explicit building grounding with slab or terraced foundations",
         "surface-conforming route points with explicit bridge structures",
         "surface vertical error below 3e-14 m",
         "three routes each crossing three AtlasCells",
-        "corrected full workspace compilation, strict Clippy and tests",
+        "complete workspace compilation, strict Clippy and tests",
         "corrected Linux and Windows Bevy builds",
-        "replacement Windows package p4-region-scale-materialization-windows-x64",
-        "workflow run 31290787156 and artifact 9031331900"
+        "workflow run 31290787156 and artifact 9031331900",
+        "successful final manual GPU validation",
+        "manual result recorded in docs/evidence/p4-region-scale-manual-gpu-validation-2026-08-09.md"
       ],
-      "evidence_missing": [
-        "successful manual GPU revalidation of region scale, cell activation, neighbor proxies, foundations, surface routes, bridge and cross-cell handoff",
-        "final combined P4 verdict"
+      "resolved_blocking_issues": [
+        "Issue #21 AtlasCell versus TerrainTile scale and materialization boundary",
+        "Issue #22 building terrain grounding and foundation contract",
+        "Issue #23 route surface conformance and bridge semantics"
       ],
-      "known_blocking_issues": [
-        "Issue #21 awaiting manual verification of AtlasCell versus TerrainTile separation",
-        "Issue #22 awaiting manual verification of building grounding and foundations",
-        "Issue #23 awaiting manual verification of route surface conformance and bridge semantics"
-      ],
-      "known_scope_correction": "The corrected automated model now separates 4 km AtlasCell regions from 250 m TerrainTiles, activates one full cell plus neighbor proxies, grounds buildings through explicit foundations, and classifies route vertical semantics. P4 remains unpassed until the replacement Windows package is manually accepted."
+      "final_verdict": "The integrated Atlas, regional materialization, geography, history, building grounding, route surface semantics, cross-cell travel and cross-scale identity chain passed automated and manual validation."
     },
     {
       "id": "P5",
+      "name": "authoritative-server-persistence-recovery-and-replay",
       "status": "not-started",
       "passed": false,
-      "blocked_by": [
-        "P4 final combined manual validation",
-        "Issue #21",
-        "Issue #22",
-        "Issue #23"
-      ]
+      "issue": 24,
+      "ready_to_start": true,
+      "blocked_by": []
     },
     {
       "id": "P6",

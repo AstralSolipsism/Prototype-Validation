@@ -48,10 +48,7 @@ pub struct ScenarioIds {
 
 pub fn generate_p5_scenario() -> Result<P5Scenario, ScenarioError> {
     let region = generate_region_scale_world()?;
-    let primary_route = region
-        .routes
-        .first()
-        .ok_or(ScenarioError::MissingRoute)?;
+    let primary_route = region.routes.first().ok_or(ScenarioError::MissingRoute)?;
     let mut ordered_cells = primary_route.crossed_cells.clone();
     ordered_cells.dedup();
     let start_cell = *ordered_cells.first().ok_or(ScenarioError::MissingRoute)?;
@@ -286,7 +283,12 @@ mod tests {
     fn baseline_uses_p4_world_identity_and_route() {
         let scenario = generate_p5_scenario().expect("scenario");
         assert_eq!(scenario.baseline.world_id, scenario.ids.world_id);
-        assert!(scenario.baseline.routes.contains_key(&scenario.ids.route_id));
+        assert!(
+            scenario
+                .baseline
+                .routes
+                .contains_key(&scenario.ids.route_id)
+        );
         assert_ne!(scenario.ids.start_cell, scenario.ids.destination_cell);
         assert_eq!(scenario.baseline.players.len(), 2);
     }

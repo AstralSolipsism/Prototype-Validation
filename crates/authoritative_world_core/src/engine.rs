@@ -17,6 +17,8 @@ pub enum AuthorityError {
     },
     #[error("journal state fingerprint mismatch")]
     JournalFingerprint,
+    #[error("entity version conflict: expected {expected}, actual {actual}")]
+    VersionConflict { expected: u64, actual: u64 },
     #[error("domain invariant failed: {0}")]
     Invariant(String),
 }
@@ -141,15 +143,14 @@ impl AuthorityServer {
                 apply_event(&mut self.world, event)?;
             }
             self.world.revision = delta.to_revision;
+            self.world.clock = record.envelope.issued_at;
         }
         let actual = self.world.semantic_fingerprint()?;
         if actual != record.stored_receipt.state_fingerprint {
             return Err(AuthorityError::JournalFingerprint);
         }
-        self.idempotency.insert(
-            record.envelope.command_id,
-            record.stored_receipt.clone(),
-        );
+        self.idempotency
+            .insert(record.envelope.command_id, record.stored_receipt.clone());
         self.next_journal_sequence += 1;
         self.journal.push(record);
         Ok(())
@@ -301,7 +302,18 @@ impl AuthorityServer {
                                 ),
                             );
                         }
-                        self.execute_mutation(envelope, command)
+                        match self.execute_mutation(envelope, command) {
+                            Err(AuthorityError::VersionConflict { expected, actual }) => {
+                                self.rejected(
+                                    envelope.command_id,
+                                    RejectionCode::VersionConflict,
+                                    format!(
+                                        "entity version mismatch: expected {expected}, actual {actual}"
+                                    ),
+                                )
+                            }
+                            result => result,
+                        }
                     }
                     AuthorityCommand::Connect { .. } => unreachable!("connect handled above"),
                 }
@@ -346,7 +358,8 @@ impl AuthorityServer {
                     .ordered_cells
                     .iter()
                     .position(|cell| *cell == *destination);
-                if from_index.is_none() || to_index.is_none() || actor.current_cell == *destination {
+                if from_index.is_none() || to_index.is_none() || actor.current_cell == *destination
+                {
                     return self.rejected(
                         envelope.command_id,
                         RejectionCode::InvalidState,
@@ -666,7 +679,8 @@ impl AuthorityServer {
                 "client is not connected",
             ));
         };
-        if session.session_id != envelope.audit.session_id || session.actor_id != envelope.actor_id {
+        if session.session_id != envelope.audit.session_id || session.actor_id != envelope.actor_id
+        {
             return Err(rejection(
                 RejectionCode::PermissionDenied,
                 "session identity does not match the command actor",
@@ -683,10 +697,10 @@ impl AuthorityServer {
         if let Some(expected) = envelope.expected_entity_version
             && expected != actual
         {
-            return Err(AuthorityError::Invariant(format!(
-                "VERSION_CONFLICT:{}:{}",
-                expected.0, actual.0
-            )));
+            return Err(AuthorityError::VersionConflict {
+                expected: expected.0,
+                actual: actual.0,
+            });
         }
         Ok(())
     }

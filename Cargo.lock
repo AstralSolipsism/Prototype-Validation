@@ -316,6 +316,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "authoritative_world_core"
+version = "0.1.0"
+dependencies = [
+ "protocol",
+ "replay_core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "world_generation_core",
+ "world_ids",
+ "world_time",
+]
+
+[[package]]
+name = "authority_persistence"
+version = "0.1.0"
+dependencies = [
+ "authoritative_world_core",
+ "serde_json",
+ "thiserror 2.0.20",
+ "world_ids",
+]
+
+[[package]]
+name = "authority_transport"
+version = "0.1.0"
+dependencies = [
+ "authoritative_world_core",
+ "authority_persistence",
+ "replay_core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "world_ids",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3911,6 +3948,50 @@ dependencies = [
  "serde",
  "serde_json",
  "world_generation_core",
+]
+
+[[package]]
+name = "p5_authority_scenario"
+version = "0.1.0"
+dependencies = [
+ "authoritative_world_core",
+ "p4_region_scale_scenario",
+ "protocol",
+ "region_scale_core",
+ "world_generation_core",
+ "world_ids",
+ "world_time",
+]
+
+[[package]]
+name = "p5_authority_trace"
+version = "0.1.0"
+dependencies = [
+ "p5_validation_harness",
+ "serde_json",
+]
+
+[[package]]
+name = "p5_manual_validation"
+version = "0.1.0"
+dependencies = [
+ "p5_validation_harness",
+]
+
+[[package]]
+name = "p5_validation_harness"
+version = "0.1.0"
+dependencies = [
+ "authoritative_world_core",
+ "authority_persistence",
+ "authority_transport",
+ "p5_authority_scenario",
+ "protocol",
+ "replay_core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "world_ids",
 ]
 
 [[package]]

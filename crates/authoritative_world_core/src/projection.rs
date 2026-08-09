@@ -188,10 +188,9 @@ impl ClientProjection {
                     vehicle_id: *vehicle_id,
                 };
                 player.version = EntityVersion(player.version.0 + 1);
-                let vehicle = self
-                    .vehicles
-                    .get_mut(vehicle_id)
-                    .ok_or_else(|| AuthorityError::Invariant("projection vehicle missing".into()))?;
+                let vehicle = self.vehicles.get_mut(vehicle_id).ok_or_else(|| {
+                    AuthorityError::Invariant("projection vehicle missing".into())
+                })?;
                 vehicle.passengers.insert(*player_id);
                 vehicle.version = EntityVersion(vehicle.version.0 + 1);
             }
@@ -208,10 +207,9 @@ impl ClientProjection {
                 player.current_cell = *cell;
                 player.location = ActorLocation::InCell { cell: *cell };
                 player.version = EntityVersion(player.version.0 + 1);
-                let vehicle = self
-                    .vehicles
-                    .get_mut(vehicle_id)
-                    .ok_or_else(|| AuthorityError::Invariant("projection vehicle missing".into()))?;
+                let vehicle = self.vehicles.get_mut(vehicle_id).ok_or_else(|| {
+                    AuthorityError::Invariant("projection vehicle missing".into())
+                })?;
                 vehicle.passengers.remove(player_id);
                 vehicle.version = EntityVersion(vehicle.version.0 + 1);
             }
@@ -221,10 +219,9 @@ impl ClientProjection {
                 opening_id,
                 ..
             } => {
-                let building = self
-                    .buildings
-                    .get_mut(building_id)
-                    .ok_or_else(|| AuthorityError::Invariant("projection building missing".into()))?;
+                let building = self.buildings.get_mut(building_id).ok_or_else(|| {
+                    AuthorityError::Invariant("projection building missing".into())
+                })?;
                 building.openings.insert(*opening_id, *wall_id);
                 building.version = EntityVersion(building.version.0 + 1);
             }

@@ -147,12 +147,11 @@ impl FilePersistenceStore {
             if line.trim().is_empty() {
                 continue;
             }
-            let record = serde_json::from_str(&line).map_err(|source| {
-                PersistenceError::JournalLine {
+            let record =
+                serde_json::from_str(&line).map_err(|source| PersistenceError::JournalLine {
                     line: line_index + 1,
                     source,
-                }
-            })?;
+                })?;
             records.push(record);
         }
         records.sort_by_key(|record: &JournalRecord| record.sequence);

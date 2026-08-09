@@ -1,8 +1,8 @@
 #![forbid(unsafe_code)]
 
 use authoritative_world_core::{
-    AuthorityCommandEnvelope, AuthorityError, AuthorityServer, CommandProcessResult, CommandReceipt,
-    ReceiptDisposition, WorldRevision, WorldState,
+    AuthorityCommandEnvelope, AuthorityError, AuthorityServer, CommandProcessResult,
+    CommandReceipt, ReceiptDisposition, WorldRevision, WorldState,
 };
 use authority_persistence::{FilePersistenceStore, PersistenceError};
 use replay_core::StateFingerprint;
@@ -48,7 +48,9 @@ pub enum WireResponse {
     },
     Summary(ServerSummary),
     Ack,
-    Error { message: String },
+    Error {
+        message: String,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -290,10 +292,7 @@ impl RunningAuthorityServer {
             .summary()
     }
 
-    pub fn write_snapshot(
-        &self,
-        snapshot_id: SnapshotId,
-    ) -> Result<ServerSummary, TransportError> {
+    pub fn write_snapshot(&self, snapshot_id: SnapshotId) -> Result<ServerSummary, TransportError> {
         let host = self.host.lock().map_err(|_| TransportError::Poisoned)?;
         host.store.write_snapshot(&host.server, snapshot_id)?;
         host.summary()

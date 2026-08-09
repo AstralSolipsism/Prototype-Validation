@@ -148,11 +148,26 @@
     {
       "id": "P5",
       "name": "authoritative-server-persistence-recovery-and-replay",
-      "status": "not-started",
+      "status": "implementation-in-progress",
       "passed": false,
       "issue": 24,
-      "ready_to_start": true,
-      "blocked_by": []
+      "ready_to_start": false,
+      "blocked_by": [],
+      "pull_request": 25,
+      "evidence_present": [
+        "engine-independent authoritative world state and command model",
+        "persistent idempotency ledger and versioned domain events",
+        "atomic region snapshot and transactional append-only journal",
+        "ordered ingress for duplicate, delayed and out-of-order commands",
+        "loopback TCP authority server and two client projections",
+        "P5 deterministic scenario derived from the accepted P4 world"
+      ],
+      "evidence_missing": [
+        "green complete-workspace P5 automated gate",
+        "successful snapshot plus journal restart recovery trace",
+        "Windows x64 P5 manual validation package",
+        "project owner manual acceptance"
+      ]
     },
     {
       "id": "P6",

@@ -163,8 +163,7 @@ pub fn run_validation(
         &mut observe,
         "authoritative item ownership",
         "The item moved from the world container to A in both client projections".into(),
-        projection_a.items[&scenario.ids.item_id].owner
-            == ItemOwner::Person(scenario.ids.player_a)
+        projection_a.items[&scenario.ids.item_id].owner == ItemOwner::Person(scenario.ids.player_a)
             && projection_b.items[&scenario.ids.item_id].owner
                 == ItemOwner::Person(scenario.ids.player_a),
     );
@@ -177,7 +176,8 @@ pub fn run_validation(
         &mut checks,
         &mut observe,
         "idempotent duplicate command",
-        "The same CommandId returned the original result without transferring the item twice".into(),
+        "The same CommandId returned the original result without transferring the item twice"
+            .into(),
         duplicate.disposition == ReceiptDisposition::Duplicate
             && projection_a.players[&scenario.ids.player_a]
                 .inventory
@@ -203,7 +203,7 @@ pub fn run_validation(
         "A enters destination building",
     );
     let buffered = client_a.request(&WireRequest::Command(enter_command.clone()))?;
-    if matches!(buffered, WireResponse::Buffered { .. }) {
+    if matches!(&buffered, WireResponse::Buffered { .. }) {
         buffered_count += 1;
     }
     let flushed = client_a.request(&WireRequest::Command(move_command))?;
@@ -224,7 +224,7 @@ pub fn run_validation(
         "out-of-order buffering and cross-cell travel",
         "The future enter-building request waited for the missing move request, then both committed in sequence"
             .into(),
-        matches!(buffered, WireResponse::Buffered { .. })
+        matches!(&buffered, WireResponse::Buffered { .. })
             && receipts.len() == 2
             && projection_a.players[&scenario.ids.player_a].current_cell
                 == scenario.ids.destination_cell
@@ -344,12 +344,7 @@ pub fn run_validation(
         ),
     );
 
-    let disconnect = factory_a.envelope(
-        AuthorityCommand::Disconnect,
-        None,
-        None,
-        "A disconnects",
-    );
+    let disconnect = factory_a.envelope(AuthorityCommand::Disconnect, None, None, "A disconnects");
     let _ = client_a.command(disconnect)?;
     drop(client_a);
 
@@ -431,24 +426,26 @@ pub fn run_validation(
         scenario.ids.world_id,
         0x5500_0000_0000_0000,
     );
-    let recovered_receipt_a = single_receipt(recovered_a.command(recovered_factory_a.envelope(
-        AuthorityCommand::Connect {
-            last_acknowledged_revision: WorldRevision::ZERO,
-            interest_center: scenario.ids.destination_cell,
-        },
-        None,
-        None,
-        "A connects after recovery",
-    ))?)?;
-    let recovered_receipt_b = single_receipt(recovered_b.command(recovered_factory_b.envelope(
-        AuthorityCommand::Connect {
-            last_acknowledged_revision: WorldRevision::ZERO,
-            interest_center: scenario.ids.start_cell,
-        },
-        None,
-        None,
-        "B connects after recovery",
-    ))?)?;
+    let recovered_receipt_a =
+        single_receipt(recovered_a.command(recovered_factory_a.envelope(
+            AuthorityCommand::Connect {
+                last_acknowledged_revision: WorldRevision::ZERO,
+                interest_center: scenario.ids.destination_cell,
+            },
+            None,
+            None,
+            "A connects after recovery",
+        ))?)?;
+    let recovered_receipt_b =
+        single_receipt(recovered_b.command(recovered_factory_b.envelope(
+            AuthorityCommand::Connect {
+                last_acknowledged_revision: WorldRevision::ZERO,
+                interest_center: scenario.ids.start_cell,
+            },
+            None,
+            None,
+            "B connects after recovery",
+        ))?)?;
     let mut recovered_projection_a = projection_from_receipt(recovered_receipt_a)?;
     let mut recovered_projection_b = projection_from_receipt(recovered_receipt_b)?;
     record(

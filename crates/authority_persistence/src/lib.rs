@@ -60,6 +60,48 @@ impl FilePersistenceStore {
         Ok(())
     }
 
+    pub fn append_records_transactional(
+        &self,
+        additions: &[JournalRecord],
+    ) -> Result<(), PersistenceError> {
+        if additions.is_empty() {
+            return Ok(());
+        }
+        self.ensure_ready()?;
+        let mut records = self.load_journal()?;
+        let mut expected = records
+            .last()
+            .map_or(0, |record| record.sequence.saturating_add(1));
+        for record in additions {
+            if record.sequence != expected {
+                return Err(PersistenceError::JournalSequence {
+                    expected,
+                    actual: record.sequence,
+                });
+            }
+            records.push(record.clone());
+            expected += 1;
+        }
+
+        let target = self.journal_path();
+        let temporary = self.root.join("command-journal.ndjson.tmp");
+        {
+            let file = File::create(&temporary)?;
+            let mut writer = BufWriter::new(file);
+            for record in &records {
+                serde_json::to_writer(&mut writer, record)?;
+                writer.write_all(b"\n")?;
+            }
+            writer.flush()?;
+            writer.get_ref().sync_all()?;
+        }
+        if target.exists() {
+            fs::remove_file(&target)?;
+        }
+        fs::rename(&temporary, &target)?;
+        Ok(())
+    }
+
     pub fn write_snapshot(
         &self,
         server: &AuthorityServer,
@@ -146,4 +188,6 @@ pub enum PersistenceError {
         line: usize,
         source: serde_json::Error,
     },
+    #[error("journal sequence mismatch: expected {expected}, actual {actual}")]
+    JournalSequence { expected: u64, actual: u64 },
 }

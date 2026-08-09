@@ -10,6 +10,7 @@ on:
 permissions:
   contents: write
 
+# One-shot synchronization of the already validated P7 gate into repository state.
 jobs:
   sync:
     runs-on: ubuntu-latest

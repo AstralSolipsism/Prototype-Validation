@@ -17,8 +17,23 @@
   - SHA-256：`aa755caad153a73498b4bc2fba1e950aad41d98f19d93199e81003b3100e8767`
 - `p6-tier-transition.json`
   - SHA-256：`f19b57dce00bfc427f3539ef9cad69b39138d87375ffcd3b667d38ab65953585`
+- `p6-machine-info.txt`
+  - SHA-256：`2194243da0af72bde69eec831169d386c71fa5b342ecf30da9450da3f70ca47a`
+  - 仓库归档：`docs/evidence/raw/p6-machine-info-2026-08-09.txt`
 
-未提交 `p6-machine-info.txt`，因此项目所有者测试机器的 CPU、内存和操作系统版本没有归档。该缺口不影响本轮语义、规模和调度停止线判定，但后续做跨硬件容量比较时需重新采集。
+## 项目所有者测试机器
+
+```text
+Computer = Gigabyte Technology Co., Ltd. Z390 AORUS MASTER
+Windows = Microsoft Windows 10 企业版 10.0.19045
+CPU = Intel(R) Core(TM) i9-9900KF CPU @ 3.60GHz
+Logical processors = 16
+Physical memory = 63.93 GiB
+PowerShell = 5.1.19041.6456
+Generated = 2026-08-09T17:56:35.5463363+08:00
+```
+
+机器信息文件中的可选人工观察栏未填写，因此未归档进程峰值工作集、是否出现长时间无响应和是否持续增长内存等主观观察。程序报告已独立记录两次完整运行耗时分别为 1,529 ms 和 1,479 ms；该缺项不影响已经通过的语义、规模和调度停止线。
 
 ## 产物一致性核验
 

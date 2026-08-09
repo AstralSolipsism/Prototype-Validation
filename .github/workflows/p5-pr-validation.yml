@@ -53,10 +53,11 @@ jobs:
       - name: Static architecture and stage checks
         run: ./scripts/run_static_checks.sh
 
-      - name: Normalize formatting and verify lockfile
+      - name: Normalize formatting and generate the P5 dependency lock
         run: |
           cargo fmt --all
           cargo fmt --all -- --check
+          cargo generate-lockfile
           test -f Cargo.lock
 
       - name: Complete workspace compilation
@@ -140,11 +141,12 @@ jobs:
             echo '- P0 through P4 regression checks'
           } > artifacts/p5-authority-gate-summary.md
 
-      - name: Upload P5 automated evidence
+      - name: Upload P5 automated evidence and generated lockfile
         uses: actions/upload-artifact@v4
         with:
           name: p5-authority-automated-evidence
           path: |
+            Cargo.lock
             artifacts/p1-camera-trace.json
             artifacts/p2-reference-frame-trace.json
             artifacts/p3-building-trace.json
@@ -187,6 +189,13 @@ jobs:
         with:
           name: p5-authority-automated-evidence
           path: evidence
+
+      - name: Install the exact Linux-validated Cargo lockfile
+        shell: pwsh
+        run: |
+          $lock = Get-ChildItem evidence -Recurse -Filter Cargo.lock | Select-Object -First 1
+          if ($null -eq $lock) { throw 'Validated Cargo.lock was not found.' }
+          Copy-Item $lock.FullName .\Cargo.lock -Force
 
       - name: Build P5 release executable
         run: cargo build --release --locked -p p5_manual_validation

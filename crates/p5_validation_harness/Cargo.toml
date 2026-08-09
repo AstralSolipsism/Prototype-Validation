@@ -15,4 +15,5 @@ replay_core = { path = "../replay_core" }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+world_generation_core = { path = "../world_generation_core" }
 world_ids = { path = "../world_ids" }

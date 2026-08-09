@@ -84,15 +84,32 @@ def main() -> int:
         ROOT / "docs/evidence/p6-simulation-scale-manual-validation-2026-08-09.md"
     ).is_file()
 
-    assert stages["P7"]["status"] in {
+    p7 = stages["P7"]
+    assert p7["status"] in {
         "implementation-in-progress",
         "automated-gate-passed-awaiting-manual-validation",
+        "passed",
     }
-    assert stages["P7"]["passed"] is False
-    assert stages["P7"]["issue"] == 28
-    assert stages["P7"]["pull_request"] == 29
-    assert stages["P8"]["status"] == "not-started"
-    assert stages["P8"]["blocked_by"] == ["P7 manual validation"]
+    assert p7["issue"] == 28
+    assert p7["pull_request"] == 29
+    if p7["status"] == "passed":
+        assert p7["passed"] is True
+        assert p7["evidence_missing"] == []
+        assert p7["manual_validation"]["checks_passed"] == 15
+        assert p7["manual_validation"]["checks_total"] == 15
+        assert p7["manual_validation"]["fingerprint"] == p7["manual_validation"][
+            "repeat_fingerprint"
+        ]
+        assert (
+            ROOT / "docs/evidence/p7-region-authority-manual-validation-2026-08-09.md"
+        ).is_file()
+        assert stages["P8"]["status"] == "not-started"
+        assert stages["P8"]["ready_to_start"] is True
+        assert stages["P8"]["blocked_by"] == []
+    else:
+        assert p7["passed"] is False
+        assert stages["P8"]["status"] == "not-started"
+        assert stages["P8"]["blocked_by"] == ["P7 manual validation"]
 
     print("Workspace manifest and prototype status passed.")
     return 0

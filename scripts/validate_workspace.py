@@ -77,13 +77,26 @@ def main() -> int:
         ROOT / "docs/evidence/p4-region-scale-manual-gpu-validation-2026-08-09.md"
     ).is_file()
 
-    assert stages["P5"]["status"] in {
+    p5 = stages["P5"]
+    assert p5["status"] in {
         "implementation-in-progress",
         "automated-gate-passed-awaiting-manual-validation",
+        "passed",
     }
-    assert stages["P5"]["passed"] is False
-    assert stages["P5"]["issue"] == 24
-    assert stages["P5"]["pull_request"] == 25
+    assert p5["issue"] == 24
+    assert p5["pull_request"] == 25
+
+    if p5["status"] == "passed":
+        assert p5["passed"] is True
+        assert p5.get("evidence_missing") == []
+        assert (
+            ROOT / "docs/evidence/p5-authority-manual-validation-2026-08-09.md"
+        ).is_file()
+        assert stages["P6"].get("ready_to_start") is True
+        assert stages["P6"].get("blocked_by") == []
+    else:
+        assert p5["passed"] is False
+
     assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(6, 9))
 
     print("Workspace manifest and prototype status passed.")

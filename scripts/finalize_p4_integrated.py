@@ -71,11 +71,16 @@ def normalize_visual_source() -> None:
 
 
 def normalize_region_scale_source() -> None:
-    path = ROOT / "crates/region_scale_core/src/lib.rs"
-    text = path.read_text(encoding="utf-8")
-    text = text.replace("            elevation: summary.0,", "            elevation: summary.0.clone(),", 1)
-    text = text.replace("            landforms: summary.1,", "            landforms: summary.1.clone(),", 1)
-    path.write_text(text, encoding="utf-8")
+    core_path = ROOT / "crates/region_scale_core/src/lib.rs"
+    core = core_path.read_text(encoding="utf-8")
+    core = core.replace("            elevation: summary.0,", "            elevation: summary.0.clone(),", 1)
+    core = core.replace("            landforms: summary.1,", "            landforms: summary.1.clone(),", 1)
+    core_path.write_text(core, encoding="utf-8")
+
+    visual_path = ROOT / "apps/p4_region_scale_visual/src/main.rs"
+    visual = visual_path.read_text(encoding="utf-8")
+    visual = visual.replace("            shadows_enabled: true,", "            shadow_maps_enabled: true,", 1)
+    visual_path.write_text(visual, encoding="utf-8")
 
 
 def validate_persisted_core_fixes() -> None:

@@ -1,0 +1,16 @@
+[package]
+name = "p7_validation_harness"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+region_authority_core = { path = "../region_authority_core" }
+replay_core = { path = "../replay_core" }
+serde.workspace = true
+serde_json.workspace = true
+simulation_scale_core = { path = "../simulation_scale_core" }
+thiserror.workspace = true
+world_generation_core = { path = "../world_generation_core" }
+world_ids = { path = "../world_ids" }

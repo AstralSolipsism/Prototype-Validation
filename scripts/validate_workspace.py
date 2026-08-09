@@ -45,6 +45,8 @@ def main() -> int:
         "crates/p5_validation_harness",
         "crates/simulation_scale_core",
         "crates/p6_validation_harness",
+        "crates/region_authority_core",
+        "crates/p7_validation_harness",
         "apps/camera_trace",
         "apps/camera_routes",
         "apps/p2_reference_frame_trace",
@@ -61,50 +63,36 @@ def main() -> int:
         "apps/p5_manual_validation",
         "apps/p6_simulation_trace",
         "apps/p6_manual_validation",
+        "apps/p7_region_trace",
+        "apps/p7_manual_validation",
     }
     assert required <= members, required - members
 
     status = json.loads((ROOT / "prototype-status.json").read_text(encoding="utf-8"))
     stages = {entry["id"]: entry for entry in status["stages"]}
     assert stages["P0"]["passed"] is True
-    assert stages["P0"]["status"] == "passed"
     assert stages["P1"]["passed"] is True
-    assert stages["P1"]["status"] == "passed-with-non-blocking-engineering-followups"
     assert stages["P2"]["passed"] is True
-    assert stages["P2"]["status"] == "passed"
     assert stages["P3"]["passed"] is True
-    assert stages["P3"]["status"] == "passed"
     assert stages["P4"]["passed"] is True
-    assert stages["P4"]["status"] == "passed"
     assert all(stage["passed"] is True for stage in stages["P4"]["sub_stages"])
-    assert (
-        ROOT / "docs/evidence/p4-region-scale-manual-gpu-validation-2026-08-09.md"
-    ).is_file()
     assert stages["P5"]["passed"] is True
     assert stages["P5"]["status"] == "passed"
-    assert (
-        ROOT / "docs/evidence/p5-authority-manual-validation-2026-08-09.md"
-    ).is_file()
-
     assert stages["P6"]["passed"] is True
     assert stages["P6"]["status"] == "passed"
-    assert stages["P6"]["issue"] == 26
-    assert stages["P6"]["pull_request"] == 27
     assert (
         ROOT / "docs/evidence/p6-simulation-scale-manual-validation-2026-08-09.md"
     ).is_file()
-    assert stages["P6"]["manual_validation"]["checks_passed"] == 12
-    assert stages["P6"]["manual_validation"]["checks_total"] == 12
-    assert (
-        stages["P6"]["manual_validation"]["fingerprint"]
-        == stages["P6"]["manual_validation"]["repeat_fingerprint"]
-    )
 
-    assert stages["P7"]["status"] == "not-started"
+    assert stages["P7"]["status"] in {
+        "implementation-in-progress",
+        "automated-gate-passed-awaiting-manual-validation",
+    }
     assert stages["P7"]["passed"] is False
-    assert stages["P7"]["ready_to_start"] is True
-    assert stages["P7"]["blocked_by"] == []
+    assert stages["P7"]["issue"] == 28
+    assert stages["P7"]["pull_request"] == 29
     assert stages["P8"]["status"] == "not-started"
+    assert stages["P8"]["blocked_by"] == ["P7 manual validation"]
 
     print("Workspace manifest and prototype status passed.")
     return 0

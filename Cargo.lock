@@ -3958,6 +3958,7 @@ dependencies = [
  "p4_region_scale_scenario",
  "protocol",
  "region_scale_core",
+ "thiserror 2.0.20",
  "world_generation_core",
  "world_ids",
  "world_time",

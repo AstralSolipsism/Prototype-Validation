@@ -148,31 +148,48 @@
     {
       "id": "P5",
       "name": "authoritative-server-persistence-recovery-and-replay",
-      "status": "implementation-in-progress",
+      "status": "automated-gate-passed-awaiting-manual-validation",
       "passed": false,
       "issue": 24,
+      "pull_request": 25,
       "ready_to_start": false,
       "blocked_by": [],
-      "pull_request": 25,
       "evidence_present": [
-        "engine-independent authoritative world state and command model",
+        "engine-independent authoritative world state and typed command model",
         "persistent idempotency ledger and versioned domain events",
+        "structured world and entity version conflict rejection",
         "atomic region snapshot and transactional append-only journal",
         "ordered ingress for duplicate, delayed and out-of-order commands",
-        "loopback TCP authority server and two client projections",
-        "P5 deterministic scenario derived from the accepted P4 world"
+        "real loopback TCP authority server and two independent client projections",
+        "disconnect and reconnect without authoritative state loss",
+        "snapshot plus post-snapshot journal process recovery",
+        "pre-crash and recovered semantic state fingerprints are identical",
+        "client visual cache deletion and reconstruction from authority snapshots",
+        "complete P0 through P4 regression gate",
+        "Linux and Windows x64 automatic P5 validation passed",
+        "Windows x64 manual validation package generated"
       ],
       "evidence_missing": [
-        "green complete-workspace P5 automated gate",
-        "successful snapshot plus journal restart recovery trace",
-        "Windows x64 P5 manual validation package",
         "project owner manual acceptance"
-      ]
+      ],
+      "automated_gate": {
+        "workflow_run": 31300726544,
+        "validated_source": "de6e6efcedd1c561859d1af2d9d5ab76a03eb410",
+        "result": "passed",
+        "manual_artifact": "p5-authority-manual-validation-windows-x64",
+        "manual_artifact_id": 9034441075,
+        "manual_artifact_sha256": "7abbeba87ba37f42a8402c5e3d0120e2df32e48ccc2cf844533464ad1cf549f5",
+        "evidence_artifact": "p5-authority-automated-evidence",
+        "evidence_artifact_id": 9034420892
+      }
     },
     {
       "id": "P6",
       "status": "not-started",
-      "passed": false
+      "passed": false,
+      "blocked_by": [
+        "P5 manual validation"
+      ]
     },
     {
       "id": "P7",

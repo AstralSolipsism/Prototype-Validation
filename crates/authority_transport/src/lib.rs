@@ -21,9 +21,12 @@ use std::{
 use thiserror::Error;
 use world_ids::{CommandId, SessionId, SnapshotId};
 
+#[allow(clippy::large_enum_variant)]
+// Wire requests are serialized immediately; keeping the typed command envelope inline avoids
+// transport-only indirection leaking through the validation client API.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum WireRequest {
-    Command(Box<AuthorityCommandEnvelope>),
+    Command(AuthorityCommandEnvelope),
     SnapshotNow { snapshot_id: SnapshotId },
     Inspect,
     Shutdown,
@@ -330,7 +333,7 @@ fn handle_connection(
             WireRequest::Command(envelope) => host
                 .lock()
                 .map_err(|_| TransportError::Poisoned)?
-                .handle_command(*envelope),
+                .handle_command(envelope),
             WireRequest::SnapshotNow { snapshot_id } => {
                 let host = host.lock().map_err(|_| TransportError::Poisoned)?;
                 let snapshot = host.store.write_snapshot(&host.server, snapshot_id)?;
@@ -392,7 +395,7 @@ impl TcpAuthorityClient {
         &mut self,
         envelope: AuthorityCommandEnvelope,
     ) -> Result<Vec<CommandReceipt>, TransportError> {
-        match self.request(&WireRequest::Command(Box::new(envelope)))? {
+        match self.request(&WireRequest::Command(envelope))? {
             WireResponse::Receipts(receipts) => Ok(receipts),
             WireResponse::Buffered { .. } => Ok(Vec::new()),
             WireResponse::StaleSequence { .. } => Err(TransportError::StaleSequence),

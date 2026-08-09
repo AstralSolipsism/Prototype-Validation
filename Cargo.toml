@@ -23,6 +23,8 @@ members = [
     "crates/authority_transport",
     "crates/p5_authority_scenario",
     "crates/p5_validation_harness",
+    "crates/simulation_scale_core",
+    "crates/p6_validation_harness",
     "apps/camera_trace",
     "apps/camera_routes",
     "apps/p2_reference_frame_trace",
@@ -37,6 +39,8 @@ members = [
     "apps/p4_region_scale_visual",
     "apps/p5_authority_trace",
     "apps/p5_manual_validation",
+    "apps/p6_simulation_trace",
+    "apps/p6_manual_validation",
 ]
 
 [workspace.package]

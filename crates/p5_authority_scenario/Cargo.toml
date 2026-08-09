@@ -10,6 +10,7 @@ authoritative_world_core = { path = "../authoritative_world_core" }
 p4_region_scale_scenario = { path = "../p4_region_scale_scenario" }
 protocol = { path = "../protocol" }
 region_scale_core = { path = "../region_scale_core" }
+thiserror.workspace = true
 world_generation_core = { path = "../world_generation_core" }
 world_ids = { path = "../world_ids" }
 world_time = { path = "../world_time" }

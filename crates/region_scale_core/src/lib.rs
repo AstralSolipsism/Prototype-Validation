@@ -668,8 +668,8 @@ fn build_atlas() -> Result<RegionAtlas, RegionScaleError> {
             )),
             coord,
             center_world: center,
-            elevation: summary.0,
-            landforms: summary.1,
+            elevation: summary.0.clone(),
+            landforms: summary.1.clone(),
             climate: if summary.0.mean_m < 80.0 {
                 ClimateBand::Maritime
             } else if summary.0.mean_m > 360.0 {

@@ -55,10 +55,10 @@ impl ClientProjection {
         if let Some(sync) = &receipt.sync {
             self.apply_sync(sync.clone())?;
         }
-        if let Some(delta) = &receipt.delta {
-            if delta.to_revision > self.revision {
-                self.apply_delta(delta)?;
-            }
+        if let Some(delta) = &receipt.delta
+            && delta.to_revision > self.revision
+        {
+            self.apply_delta(delta)?;
         }
         if self.revision == receipt.world_revision {
             self.state_fingerprint = receipt.state_fingerprint;

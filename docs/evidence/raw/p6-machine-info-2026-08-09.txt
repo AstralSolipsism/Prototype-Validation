@@ -1,0 +1,18 @@
+P6 simulation scale manual validation machine information
+Generated: 2026-08-09T17:56:35.5463363+08:00
+Computer: Gigabyte Technology Co., Ltd. Z390 AORUS MASTER
+Windows: Microsoft Windows 10 企业版 10.0.19045
+CPU: Intel(R) Core(TM) i9-9900KF CPU @ 3.60GHz
+Logical processors: 16
+Physical memory GiB: 63.93
+PowerShell: 5.1.19041.6456
+
+Manual observations
+-------------------
+Peak working set (optional):
+First run elapsed shown by program:
+Repeat run elapsed shown by program:
+Any long unresponsive period:
+Any continuously growing memory:
+Final verdict: PASS / CONDITIONAL PASS / FAIL
+Notes:

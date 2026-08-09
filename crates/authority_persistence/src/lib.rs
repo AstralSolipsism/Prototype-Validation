@@ -69,10 +69,10 @@ impl FilePersistenceStore {
         }
         self.ensure_ready()?;
         let mut records = self.load_journal()?;
-        let mut expected = records
+        let first_expected = records
             .last()
             .map_or(0, |record| record.sequence.saturating_add(1));
-        for record in additions {
+        for (expected, record) in (first_expected..).zip(additions.iter()) {
             if record.sequence != expected {
                 return Err(PersistenceError::JournalSequence {
                     expected,
@@ -80,7 +80,6 @@ impl FilePersistenceStore {
                 });
             }
             records.push(record.clone());
-            expected += 1;
         }
 
         let target = self.journal_path();

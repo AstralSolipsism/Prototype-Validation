@@ -16,6 +16,8 @@ members = [
     "crates/p4_world_scenario",
     "crates/integrated_world_core",
     "crates/p4_integrated_scenario",
+    "crates/region_scale_core",
+    "crates/p4_region_scale_scenario",
     "apps/camera_trace",
     "apps/camera_routes",
     "apps/p2_reference_frame_trace",
@@ -26,6 +28,8 @@ members = [
     "apps/world_visual",
     "apps/p4_integrated_trace",
     "apps/integrated_world_visual",
+    "apps/p4_region_scale_trace",
+    "apps/p4_region_scale_visual",
 ]
 
 [workspace.package]

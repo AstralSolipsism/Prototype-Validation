@@ -1,0 +1,48 @@
+name: p7-status-sync
+
+on:
+  push:
+    branches:
+      - agent/p7-interest-region-authority
+    paths:
+      - '.github/workflows/p7-status-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/p7-interest-region-authority
+      - name: Record P7 automated gate and artifacts
+        shell: bash
+        run: |
+          python scripts/finalize_p7.py \
+            --mode awaiting-manual \
+            --workflow-run 31310672661 \
+            --source c81094b78e47f0b389aaf00b6d645c8068df0db2
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('prototype-status.json')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          p7 = next(stage for stage in data['stages'] if stage['id'] == 'P7')
+          p7['automated_gate'].update({
+              'manual_artifact_id': 9037367640,
+              'manual_artifact_sha256': '3c86eab6a050cb39075d80c24144e04d609a0ae2024900f4b78d0da3fbd9d529',
+              'evidence_artifact_id': 9037350891,
+              'evidence_artifact_sha256': '24417f4d8a60fad9c978cca4363059ce953c5250e565e1eeebe4151acc378811',
+          })
+          path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+      - name: Commit stage status
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add prototype-status.json
+          git commit -m "Mark P7 ready for project-owner manual validation"
+          git push origin HEAD:agent/p7-interest-region-authority

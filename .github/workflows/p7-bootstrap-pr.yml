@@ -5,7 +5,7 @@ on:
     branches:
       - agent/p6-simulation-tiers-scale
     paths:
-      - '.github/workflows/p7-bootstrap-source.yml'
+      - '.p7-bootstrap/**'
       - '.github/workflows/p7-bootstrap-pr.yml'
 
 permissions:
@@ -19,22 +19,29 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - name: Extract and materialize P7 source overlay
+
+      - name: Reassemble and verify P7 source archive
         shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          text = Path('.github/workflows/p7-bootstrap-source.yml').read_text(encoding='utf-8')
-          marker = "<<'PAYLOAD'\n"
-          if marker not in text:
-              raise SystemExit('P7 payload marker is missing')
-          payload = text.split(marker, 1)[1].split('\nPAYLOAD', 1)[0].strip()
-          Path('/tmp/p7-overlay.b64').write_text(payload, encoding='ascii')
-          PY
-          base64 -d /tmp/p7-overlay.b64 > /tmp/p7-overlay.tar.gz
+          test "$(find .p7-bootstrap -maxdepth 1 -type f -name 'chunk-*' | wc -l)" -eq 10
+          cat .p7-bootstrap/chunk-* > /tmp/p7-overlay.b64
+          echo '9d10170f5f96c75b5d8d97ec65ffe71ec6168fca8b45115ee150a64ed7019daa  /tmp/p7-overlay.b64' | sha256sum --check -
+          base64 --decode /tmp/p7-overlay.b64 > /tmp/p7-overlay.tar.gz
+          echo 'e0c968d839f586b20e754b4c8c8ca00e05a43128b35b4c7df09fb2aada8e99f0  /tmp/p7-overlay.tar.gz' | sha256sum --check -
+          tar -tzf /tmp/p7-overlay.tar.gz
+
+      - name: Materialize P7 source overlay
+        shell: bash
+        run: |
           tar -xzf /tmp/p7-overlay.tar.gz
-          rm .github/workflows/p7-bootstrap-source.yml
-          rm .github/workflows/p7-bootstrap-pr.yml
+          test -f crates/region_authority_core/src/lib.rs
+          test -f crates/p7_validation_harness/src/lib.rs
+          test -f apps/p7_manual_validation/src/main.rs
+          test -f .github/workflows/p7-pr-validation.yml
+          rm -rf .p7-bootstrap
+          rm -f .github/workflows/p7-bootstrap-source.yml
+          rm -f .github/workflows/p7-bootstrap-pr.yml
+
       - name: Commit P7 source
         shell: bash
         run: |

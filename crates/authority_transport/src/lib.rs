@@ -317,6 +317,9 @@ fn handle_connection(
     host: Arc<Mutex<ServerHost>>,
     running: Arc<AtomicBool>,
 ) -> Result<(), TransportError> {
+    // On Windows, accepted streams inherit the listener's non-blocking mode. The connection
+    // worker uses blocking buffered reads, so each accepted stream must explicitly opt back in.
+    stream.set_nonblocking(false)?;
     stream.set_nodelay(true)?;
     stream.set_read_timeout(Some(Duration::from_secs(30)))?;
     let reader_stream = stream.try_clone()?;

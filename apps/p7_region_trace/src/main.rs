@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+// Headless evidence entrypoint for the P7 region-authority stop line.
 use p7_validation_harness::run_validation;
 use std::{env, fs, path::PathBuf};
 
@@ -14,7 +15,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let report = run_validation(|_| {})?;
     fs::write(&output, serde_json::to_vec_pretty(&report)?)?;
     println!("P7 trace written to {}", output.display());
-    println!("checks={}/{}", report.checks.iter().filter(|step| step.passed).count(), report.checks.len());
+    println!(
+        "checks={}/{}",
+        report.checks.iter().filter(|step| step.passed).count(),
+        report.checks.len()
+    );
     println!("all_passed={}", report.all_passed);
     println!("fingerprints_match={}", report.fingerprints_match);
     Ok(())

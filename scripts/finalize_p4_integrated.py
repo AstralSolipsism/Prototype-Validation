@@ -70,6 +70,14 @@ def normalize_visual_source() -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def normalize_region_scale_source() -> None:
+    path = ROOT / "crates/region_scale_core/src/lib.rs"
+    text = path.read_text(encoding="utf-8")
+    text = text.replace("            elevation: summary.0,", "            elevation: summary.0.clone(),", 1)
+    text = text.replace("            landforms: summary.1,", "            landforms: summary.1.clone(),", 1)
+    path.write_text(text, encoding="utf-8")
+
+
 def validate_persisted_core_fixes() -> None:
     atlas = (ROOT / "crates/integrated_world_core/src/atlas.rs").read_text(encoding="utf-8")
     history = (ROOT / "crates/integrated_world_core/src/history.rs").read_text(encoding="utf-8")
@@ -109,6 +117,7 @@ def main() -> int:
     validate_persisted_core_fixes()
     finalize_engineered_routes()
     normalize_visual_source()
+    normalize_region_scale_source()
     remove_temporary_lint_allowance()
     print("Integrated P4 source finalization completed.")
     return 0

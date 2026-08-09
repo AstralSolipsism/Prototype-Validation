@@ -205,15 +205,33 @@
     },
     {
       "id": "P6",
-      "status": "not-started",
+      "name": "simulation-tiers-event-calendar-and-million-person-scale",
+      "status": "implementation-in-progress",
       "passed": false,
-      "ready_to_start": true,
-      "blocked_by": []
+      "issue": 26,
+      "ready_to_start": false,
+      "blocked_by": [],
+      "evidence_present": [
+        "P6 acceptance specification in Issue #26",
+        "planned compact Cold population structure-of-arrays layout",
+        "planned Warm event calendar and Hot fixed-step runtime",
+        "planned Cold/Warm/Hot round-trip continuity validation"
+      ],
+      "evidence_missing": [
+        "green complete-workspace P6 automated gate",
+        "actual one-million Cold population scale report",
+        "Windows x64 P6 manual validation package",
+        "project owner manual acceptance"
+      ],
+      "pull_request": 27
     },
     {
       "id": "P7",
       "status": "not-started",
-      "passed": false
+      "passed": false,
+      "blocked_by": [
+        "P6 manual validation"
+      ]
     },
     {
       "id": "P8",

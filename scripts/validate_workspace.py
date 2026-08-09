@@ -86,14 +86,24 @@ def main() -> int:
         ROOT / "docs/evidence/p5-authority-manual-validation-2026-08-09.md"
     ).is_file()
 
-    assert stages["P6"]["status"] in {
-        "implementation-in-progress",
-        "automated-gate-passed-awaiting-manual-validation",
-    }
-    assert stages["P6"]["passed"] is False
+    assert stages["P6"]["passed"] is True
+    assert stages["P6"]["status"] == "passed"
     assert stages["P6"]["issue"] == 26
     assert stages["P6"]["pull_request"] == 27
+    assert (
+        ROOT / "docs/evidence/p6-simulation-scale-manual-validation-2026-08-09.md"
+    ).is_file()
+    assert stages["P6"]["manual_validation"]["checks_passed"] == 12
+    assert stages["P6"]["manual_validation"]["checks_total"] == 12
+    assert (
+        stages["P6"]["manual_validation"]["fingerprint"]
+        == stages["P6"]["manual_validation"]["repeat_fingerprint"]
+    )
+
     assert stages["P7"]["status"] == "not-started"
+    assert stages["P7"]["passed"] is False
+    assert stages["P7"]["ready_to_start"] is True
+    assert stages["P7"]["blocked_by"] == []
     assert stages["P8"]["status"] == "not-started"
 
     print("Workspace manifest and prototype status passed.")

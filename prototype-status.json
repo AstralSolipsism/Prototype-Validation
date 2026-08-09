@@ -285,8 +285,8 @@
     {
       "id": "P7",
       "name": "multiplayer-interest-region-authority-and-handoff",
-      "status": "automated-gate-passed-awaiting-manual-validation",
-      "passed": false,
+      "status": "passed",
+      "passed": true,
       "issue": 28,
       "pull_request": 29,
       "ready_to_start": false,
@@ -304,30 +304,65 @@
         "remote Cold/Warm person summary without high-detail entity leakage",
         "deterministic parallel execution for independent regions",
         "single-writer revision-contiguous hotspot execution",
-        "P0 through P6 regression coverage"
+        "P0 through P6 regression coverage",
+        "Linux and Windows x64 automatic P7 validation passed",
+        "project owner Windows x64 interactive validation artifacts submitted",
+        "manual report with 15 of 15 checks passed",
+        "manual client-interest and transfer files exactly match both report runs",
+        "49 cross-file structural and semantic checks passed",
+        "manual result recorded in docs/evidence/p7-region-authority-manual-validation-2026-08-09.md"
       ],
-      "evidence_missing": [
-        "project owner manual acceptance"
+      "evidence_missing": [],
+      "known_non_blocking_evidence_gaps": [
+        "p7-machine-info.txt was not submitted; P6 retains the project-owner hardware baseline"
       ],
       "automated_gate": {
-        "workflow_run": 31310672661,
-        "validated_source": "c81094b78e47f0b389aaf00b6d645c8068df0db2",
+        "workflow_run": 31311262357,
+        "validated_source": "e3372efc8fa400db92e94dc02c92a1f481d0d68a",
         "result": "passed",
         "manual_artifact": "p7-region-authority-manual-validation-windows-x64",
+        "manual_artifact_id": 9037481094,
+        "manual_artifact_sha256": "78c806f1613506488725caecfbce32cef3dbef3fb1d5cbd713ccd9c7c7cd36b3",
         "evidence_artifact": "p7-region-authority-automated-evidence",
-        "manual_artifact_id": 9037367640,
-        "manual_artifact_sha256": "3c86eab6a050cb39075d80c24144e04d609a0ae2024900f4b78d0da3fbd9d529",
-        "evidence_artifact_id": 9037350891,
-        "evidence_artifact_sha256": "24417f4d8a60fad9c978cca4363059ce953c5250e565e1eeebe4151acc378811"
-      }
+        "evidence_artifact_id": 9037467989,
+        "evidence_artifact_sha256": "83a2e7c4e0e69b048b6a1ab827df2ce950db1f935793c43373f510227dab4504"
+      },
+      "manual_validation": {
+        "date": "2026-08-09",
+        "result": "passed",
+        "evidence_file": "docs/evidence/p7-region-authority-manual-validation-2026-08-09.md",
+        "report_sha256": "eb61e77d495ec426ba9f555ac172f63c2effe1a7bd8672c498bfaf01f87cd2e3",
+        "client_interests_sha256": "79d5901f4033851793f107a117e4bf5677e36998b6a3798af2bcf18b5bae3d00",
+        "transfer_evidence_sha256": "27784446fd389d6c7db0c7e33c6be96ef55bb98f2b3471f25189723b3e22cff6",
+        "checks_passed": 15,
+        "checks_total": 15,
+        "clients": 4,
+        "static_regions": 3,
+        "mobile_regions": 1,
+        "stale_writer_rejected": true,
+        "duplicate_transfer_operations": 4,
+        "fault_recoveries": 2,
+        "unique_entity_locations": true,
+        "persistent_facts_preserved": true,
+        "ship_internal_authority_preserved": true,
+        "parallel_workers": 2,
+        "parallel_equals_sequential": true,
+        "hotspot_commands": 256,
+        "hotspot_unique_writers": 1,
+        "hotspot_first_revision": 5,
+        "hotspot_final_revision": 261,
+        "hotspot_revisions_contiguous": true,
+        "fingerprint": "81aed9ca4d8bf3bb75068b37f6f9a7e2",
+        "repeat_fingerprint": "81aed9ca4d8bf3bb75068b37f6f9a7e2"
+      },
+      "final_verdict": "The four-client interest model, static and mobile region single-writer authority, epoch rebalance, idempotent cross-region transfer, duplicate recovery, mobile interior continuity, remote summaries, deterministic independent-region parallelism and single-writer hotspot execution passed automated and project-owner manual validation."
     },
     {
       "id": "P8",
       "status": "not-started",
       "passed": false,
-      "blocked_by": [
-        "P7 manual validation"
-      ]
+      "ready_to_start": true,
+      "blocked_by": []
     }
   ]
 }

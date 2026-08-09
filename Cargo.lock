@@ -3865,6 +3865,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "p4_region_scale_scenario"
+version = "0.1.0"
+dependencies = [
+ "region_scale_core",
+]
+
+[[package]]
+name = "p4_region_scale_trace"
+version = "0.1.0"
+dependencies = [
+ "p4_region_scale_scenario",
+ "region_scale_core",
+ "serde_json",
+]
+
+[[package]]
+name = "p4_region_scale_visual"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "glam",
+ "p4_region_scale_scenario",
+ "region_scale_core",
+ "scroll_camera_core",
+ "world_generation_core",
+]
+
+[[package]]
 name = "p4_world_scenario"
 version = "0.1.0"
 dependencies = [
@@ -4292,6 +4320,19 @@ name = "regex-syntax"
 version = "0.8.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
+
+[[package]]
+name = "region_scale_core"
+version = "0.1.0"
+dependencies = [
+ "deterministic_rng",
+ "glam",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "world_generation_core",
+ "world_ids",
+]
 
 [[package]]
 name = "renderdoc-sys"

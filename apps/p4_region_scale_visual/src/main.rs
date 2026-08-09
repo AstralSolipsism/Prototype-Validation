@@ -361,11 +361,7 @@ fn spawn_atlas(
         );
     }
 
-    let port = world
-        .atlas
-        .port_cell
-        .center_xz(world.atlas.cell_radius_m)
-        * f64::from(ATLAS_SCALE);
+    let port = world.atlas.port_cell.center_xz(world.atlas.cell_radius_m) * f64::from(ATLAS_SCALE);
     commands.spawn((
         Mesh3d(assets.cube.clone()),
         MeshMaterial3d(assets.building.clone()),
@@ -415,8 +411,7 @@ fn control_app(
             .unwrap_or(world.0.atlas.cells.len() - 1);
     }
     if keyboard.just_pressed(KeyCode::KeyE) {
-        state.selected_cell_index =
-            (state.selected_cell_index + 1) % world.0.atlas.cells.len();
+        state.selected_cell_index = (state.selected_cell_index + 1) % world.0.atlas.cells.len();
     }
     if keyboard.just_pressed(KeyCode::Enter) {
         state.active_cell = world.0.atlas.cells[state.selected_cell_index].coord;
@@ -530,17 +525,15 @@ fn rebuild_local_scene(
     );
     if state.show_neighbors {
         for proxy in &active.neighbor_proxies {
-            spawn_materialization(
-                &mut commands,
-                &mut meshes,
-                &assets,
-                &world.0,
-                proxy,
-                true,
-            );
+            spawn_materialization(&mut commands, &mut meshes, &assets, &world.0, proxy, true);
         }
     }
-    spawn_water(&mut commands, &assets, state.active_cell, world.0.atlas.cell_radius_m);
+    spawn_water(
+        &mut commands,
+        &assets,
+        state.active_cell,
+        world.0.atlas.cell_radius_m,
+    );
     spawn_buildings(&mut commands, &assets, &active.focused);
     spawn_local_landmark(&mut commands, &assets, &world.0, &active);
     spawn_local_routes(&mut commands, &assets, &world.0, &active);
@@ -584,12 +577,7 @@ fn spawn_materialization(
     ));
 }
 
-fn spawn_water(
-    commands: &mut Commands,
-    assets: &VisualAssets,
-    coord: HexCoord,
-    radius: f64,
-) {
+fn spawn_water(commands: &mut Commands, assets: &VisualAssets, coord: HexCoord, radius: f64) {
     let center = coord.center_xz(radius);
     commands.spawn((
         Mesh3d(assets.cube.clone()),
@@ -631,7 +619,11 @@ fn spawn_grounded_building(
             ((building.foundation_top_m + building.foundation_bottom_m) * 0.5) as f32,
             building.grounded_center.z as f32,
         )
-        .with_scale(Vec3::new(width + 4.0, foundation_height.max(0.5), depth + 4.0)),
+        .with_scale(Vec3::new(
+            width + 4.0,
+            foundation_height.max(0.5),
+            depth + 4.0,
+        )),
         LocalDynamic,
         LocalVisual(LocalVisibility::Foundation),
         SpaceTag(SpaceLayer::Local),
@@ -641,8 +633,7 @@ fn spawn_grounded_building(
     commands.spawn((
         Mesh3d(assets.cube.clone()),
         MeshMaterial3d(assets.building.clone()),
-        Transform::from_translation(body_center)
-            .with_scale(Vec3::new(width, body_height, depth)),
+        Transform::from_translation(body_center).with_scale(Vec3::new(width, body_height, depth)),
         LocalDynamic,
         LocalVisual(LocalVisibility::BuildingFull),
         SpaceTag(SpaceLayer::Local),
@@ -663,8 +654,7 @@ fn spawn_grounded_building(
     commands.spawn((
         Mesh3d(assets.cube.clone()),
         MeshMaterial3d(assets.building_shell.clone()),
-        Transform::from_translation(body_center)
-            .with_scale(Vec3::new(width, body_height, depth)),
+        Transform::from_translation(body_center).with_scale(Vec3::new(width, body_height, depth)),
         LocalDynamic,
         LocalVisual(LocalVisibility::BuildingShell),
         SpaceTag(SpaceLayer::Local),
@@ -770,11 +760,13 @@ fn update_visibility(
             LocalVisibility::BuildingShell => state.building_lod == BuildingLod::Shell,
             LocalVisibility::BuildingMassing => state.building_lod == BuildingLod::Massing,
         });
-        commands.entity(entity).insert(if space_visible && local_visible {
-            Visibility::Visible
-        } else {
-            Visibility::Hidden
-        });
+        commands
+            .entity(entity)
+            .insert(if space_visible && local_visible {
+                Visibility::Visible
+            } else {
+                Visibility::Hidden
+            });
     }
 }
 
@@ -788,8 +780,7 @@ fn update_atlas_materials(
         if let Some(cell) = world.0.atlas.cell(visual.coord)
             && let Some(mut material) = materials.get_mut(&handle.0)
         {
-            material.base_color =
-                atlas_cell_color(cell, state.atlas_layer, &world.0.atlas.cells);
+            material.base_color = atlas_cell_color(cell, state.atlas_layer, &world.0.atlas.cells);
         }
     }
 }
@@ -851,9 +842,7 @@ fn update_camera_and_subject(
                     .looking_at(target, Vec3::NEG_Z);
         }
         AppMode::LocalOverview => {
-            let center = state
-                .active_cell
-                .center_xz(world.0.atlas.cell_radius_m);
+            let center = state.active_cell.center_xz(world.0.atlas.cell_radius_m);
             let target_y =
                 terrain_height(world.0.atlas.world_seed, center.x, center.y) as f32 + 80.0;
             let target = Vec3::new(center.x as f32, target_y, center.y as f32);
@@ -941,11 +930,7 @@ fn update_window_title(
     };
 }
 
-fn atlas_cell_color(
-    cell: &AtlasCellRegion,
-    layer: AtlasLayer,
-    all: &[AtlasCellRegion],
-) -> Color {
+fn atlas_cell_color(cell: &AtlasCellRegion, layer: AtlasLayer, all: &[AtlasCellRegion]) -> Color {
     match layer {
         AtlasLayer::Elevation => {
             let minimum = all
@@ -956,9 +941,8 @@ fn atlas_cell_color(
                 .iter()
                 .map(|entry| entry.elevation.maximum_m)
                 .fold(f64::NEG_INFINITY, f64::max);
-            let normalized =
-                ((cell.elevation.mean_m - minimum) / (maximum - minimum).max(1.0)).clamp(0.0, 1.0)
-                    as f32;
+            let normalized = ((cell.elevation.mean_m - minimum) / (maximum - minimum).max(1.0))
+                .clamp(0.0, 1.0) as f32;
             if cell.elevation.maximum_m <= 0.0 {
                 Color::srgb(0.10, 0.34, 0.66)
             } else {
@@ -1057,7 +1041,11 @@ fn terrain_normal(materialization: &CellMaterialization, x: usize, z: usize) -> 
     let left = materialization
         .sample(x.saturating_sub(1), z)
         .map(|sample| sample.world_position.y)
-        .unwrap_or(materialization.samples[materialization.sample_index(x, z)].world_position.y);
+        .unwrap_or(
+            materialization.samples[materialization.sample_index(x, z)]
+                .world_position
+                .y,
+        );
     let right = materialization
         .sample((x + 1).min(resolution - 1), z)
         .map(|sample| sample.world_position.y)

@@ -324,11 +324,7 @@ pub fn activate_cell(
     for direction in HexDirection::ALL {
         let neighbor = coord.neighbor(direction);
         if world.atlas.cell(neighbor).is_some() {
-            neighbor_proxies.push(materialize_cell(
-                world,
-                neighbor,
-                CellLod::NeighborProxy,
-            )?);
+            neighbor_proxies.push(materialize_cell(world, neighbor, CellLod::NeighborProxy)?);
         }
     }
     neighbor_proxies.sort_by_key(|materialization| materialization.coord);
@@ -430,8 +426,7 @@ pub fn terrain_height(world_seed: u128, x: f64, z: f64) -> f64 {
         260.0 * (-(((x + 2_800.0) / 1_400.0).powi(2) + ((z + 800.0) / 1_200.0).powi(2))).exp();
     let peak_two =
         220.0 * (-(((x - 500.0) / 1_600.0).powi(2) + ((z - 2_600.0) / 1_400.0).powi(2))).exp();
-    let hills = 40.0 * (x / 850.0).sin() * (z / 1_100.0).cos()
-        + 25.0 * ((x + z) / 1_300.0).sin();
+    let hills = 40.0 * (x / 850.0).sin() * (z / 1_100.0).cos() + 25.0 * ((x + z) / 1_300.0).sin();
     let river = river_center_z(x);
     let valley = -130.0 * (-((z - river) / 420.0).powi(2)).exp();
     let coastal_shelf = -220.0 / (1.0 + (-(x - 6_500.0) / 450.0).exp());
@@ -442,10 +437,8 @@ pub fn terrain_height(world_seed: u128, x: f64, z: f64) -> f64 {
 
 pub fn terrain_slope(world_seed: u128, x: f64, z: f64, spacing: f64) -> f64 {
     let delta = spacing.clamp(12.0, 80.0);
-    let dx = terrain_height(world_seed, x + delta, z)
-        - terrain_height(world_seed, x - delta, z);
-    let dz = terrain_height(world_seed, x, z + delta)
-        - terrain_height(world_seed, x, z - delta);
+    let dx = terrain_height(world_seed, x + delta, z) - terrain_height(world_seed, x - delta, z);
+    let dz = terrain_height(world_seed, x, z + delta) - terrain_height(world_seed, x, z - delta);
     ((dx / (2.0 * delta)).powi(2) + (dz / (2.0 * delta)).powi(2)).sqrt()
 }
 
@@ -496,10 +489,9 @@ pub fn validate_world(world: &RegionScaleWorld) -> Result<ValidationReport, Regi
         "one-full-cell-plus-neighbor-proxies",
         port.focused.lod == CellLod::Full
             && port.neighbor_proxies.len() <= 6
-            && port
-                .neighbor_proxies
-                .iter()
-                .all(|proxy| proxy.lod == CellLod::NeighborProxy && proxy.resolution < port.focused.resolution),
+            && port.neighbor_proxies.iter().all(|proxy| {
+                proxy.lod == CellLod::NeighborProxy && proxy.resolution < port.focused.resolution
+            }),
         format!(
             "one {}² full materialization and {} {}² proxies",
             port.focused.resolution,
@@ -557,8 +549,9 @@ pub fn validate_world(world: &RegionScaleWorld) -> Result<ValidationReport, Regi
     let route_checks = world.routes.iter().all(|route| {
         for point in &route.points {
             if point.surface == RouteSurfaceKind::SurfaceConforming {
-                maximum_vertical_error = maximum_vertical_error
-                    .max((point.world_position.y - point.terrain_height_m - SURFACE_OFFSET_M).abs());
+                maximum_vertical_error = maximum_vertical_error.max(
+                    (point.world_position.y - point.terrain_height_m - SURFACE_OFFSET_M).abs(),
+                );
             } else if point.structure_id.is_none()
                 || point.world_position.y <= point.terrain_height_m + 2.0
             {
@@ -566,7 +559,13 @@ pub fn validate_world(world: &RegionScaleWorld) -> Result<ValidationReport, Regi
             }
         }
         maximum_surface_grade = maximum_surface_grade.max(route.maximum_surface_grade);
-        route.crossed_cells.iter().copied().collect::<BTreeSet<_>>().len() >= 3
+        route
+            .crossed_cells
+            .iter()
+            .copied()
+            .collect::<BTreeSet<_>>()
+            .len()
+            >= 3
             && route.target_landmark_id == world.atlas.landmark_id
             && route.maximum_surface_grade <= 0.35 + 1.0e-9
     });
@@ -581,7 +580,14 @@ pub fn validate_world(world: &RegionScaleWorld) -> Result<ValidationReport, Regi
     let route_cell_counts = world
         .routes
         .iter()
-        .map(|route| route.crossed_cells.iter().copied().collect::<BTreeSet<_>>().len())
+        .map(|route| {
+            route
+                .crossed_cells
+                .iter()
+                .copied()
+                .collect::<BTreeSet<_>>()
+                .len()
+        })
         .collect::<Vec<_>>();
     checks.push(check(
         "routes-cross-region-boundaries",
@@ -598,7 +604,13 @@ pub fn validate_world(world: &RegionScaleWorld) -> Result<ValidationReport, Regi
                 .samples
                 .iter()
                 .filter(|sample| sample.inside_hex)
-                .all(|sample| point_in_hex(port.focused.coord, CELL_RADIUS_M, sample.world_position.xz())),
+                .all(|sample| {
+                    point_in_hex(
+                        port.focused.coord,
+                        CELL_RADIUS_M,
+                        sample.world_position.xz(),
+                    )
+                }),
         format!(
             "focused cell plus {} neighbors, not all {} Atlas cells",
             port.neighbor_proxies.len(),
@@ -647,12 +659,7 @@ fn build_atlas() -> Result<RegionAtlas, RegionScaleError> {
         )
         .len();
         let mut cell = AtlasCellRegion {
-            id: CellId::from_u128(stable_u128(
-                WORLD_SEED,
-                STAGE_ATLAS,
-                coord_key(coord),
-                1,
-            )),
+            id: CellId::from_u128(stable_u128(WORLD_SEED, STAGE_ATLAS, coord_key(coord), 1)),
             materialization_id: RegionId::from_u128(stable_u128(
                 WORLD_SEED,
                 STAGE_MATERIALIZATION,
@@ -671,7 +678,13 @@ fn build_atlas() -> Result<RegionAtlas, RegionScaleError> {
                 ClimateBand::Temperate
             },
             carrying_capacity: summary.0.buildable_fraction
-                * (1.0 + summary.1.fractions.get(&LandformClass::Floodplain).copied().unwrap_or(0.0)),
+                * (1.0
+                    + summary
+                        .1
+                        .fractions
+                        .get(&LandformClass::Floodplain)
+                        .copied()
+                        .unwrap_or(0.0)),
             terrain_tile_size_m: TERRAIN_TILE_SIZE_M,
             expected_tile_count,
             semantic_fingerprint: 0,
@@ -819,8 +832,7 @@ fn terrain_tiles_for_cell(
                         world_seed,
                         STAGE_TILE,
                         coord_key(coord),
-                        ((tile_x as i32 as u32 as u128) << 32)
-                            | tile_z as i32 as u32 as u128,
+                        ((tile_x as i32 as u32 as u128) << 32) | tile_z as i32 as u32 as u128,
                     )),
                     cell: coord,
                     tile_x,
@@ -903,18 +915,20 @@ fn building_requests(world: &RegionScaleWorld, coord: HexCoord) -> Vec<BuildingP
     offsets
         .iter()
         .enumerate()
-        .map(|(index, (x, z, half_x, half_z, height))| BuildingPlacementRequest {
-            instance_id: BuildingInstanceId::from_u128(stable_u128(
-                world.atlas.world_seed,
-                STAGE_BUILDING,
-                coord_key(coord),
-                index as u128 + 1,
-            )),
-            center_xz: center + DVec2::new(*x, *z),
-            half_extents_m: DVec2::new(*half_x, *half_z),
-            body_height_m: *height,
-            maximum_supported_relief_m: 16.0,
-        })
+        .map(
+            |(index, (x, z, half_x, half_z, height))| BuildingPlacementRequest {
+                instance_id: BuildingInstanceId::from_u128(stable_u128(
+                    world.atlas.world_seed,
+                    STAGE_BUILDING,
+                    coord_key(coord),
+                    index as u128 + 1,
+                )),
+                center_xz: center + DVec2::new(*x, *z),
+                half_extents_m: DVec2::new(*half_x, *half_z),
+                body_height_m: *height,
+                maximum_supported_relief_m: 16.0,
+            },
+        )
         .collect()
 }
 
@@ -1053,9 +1067,8 @@ fn compile_route(
     for point in xz_points {
         let terrain = terrain_height(atlas.world_seed, point.x, point.y);
         let river_distance = (point.y - river_center_z(point.x)).abs();
-        let is_bridge = route_index == 0
-            && (650.0..=1_400.0).contains(&point.x)
-            && river_distance <= 190.0;
+        let is_bridge =
+            route_index == 0 && (650.0..=1_400.0).contains(&point.x) && river_distance <= 190.0;
         let (surface, structure_id, height) = if is_bridge {
             let bank_left =
                 terrain_height(atlas.world_seed, point.x, river_center_z(point.x) - 260.0);
@@ -1081,15 +1094,16 @@ fn compile_route(
             structure_id,
         });
     }
-    let crossed_cells = points.iter().map(|point| point.cell).fold(
-        Vec::<HexCoord>::new(),
-        |mut cells, cell| {
-            if cells.last().copied() != Some(cell) {
-                cells.push(cell);
-            }
-            cells
-        },
-    );
+    let crossed_cells =
+        points
+            .iter()
+            .map(|point| point.cell)
+            .fold(Vec::<HexCoord>::new(), |mut cells, cell| {
+                if cells.last().copied() != Some(cell) {
+                    cells.push(cell);
+                }
+                cells
+            });
     let maximum_surface_grade = points
         .windows(2)
         .filter(|pair| {
@@ -1270,7 +1284,15 @@ mod tests {
     fn routes_never_fake_a_smooth_profile_inside_terrain() {
         let world = build_world().expect("world");
         for route in &world.routes {
-            assert!(route.crossed_cells.iter().copied().collect::<BTreeSet<_>>().len() >= 3);
+            assert!(
+                route
+                    .crossed_cells
+                    .iter()
+                    .copied()
+                    .collect::<BTreeSet<_>>()
+                    .len()
+                    >= 3
+            );
             for point in &route.points {
                 match point.surface {
                     RouteSurfaceKind::SurfaceConforming => assert!(

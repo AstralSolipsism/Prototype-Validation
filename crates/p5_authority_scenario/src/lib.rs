@@ -2,8 +2,8 @@
 
 use authoritative_world_core::{
     ActorLocation, AuditContext, AuthorityCommand, AuthorityCommandEnvelope, BuildingState,
-    ContainerState, DoorState, ItemOwner, ItemState, PlayerState, RouteAuthority, VehicleState,
-    WorldRevision, WorldState, P5_SCHEMA_VERSION,
+    ContainerState, DoorState, ItemOwner, ItemState, P5_SCHEMA_VERSION, PlayerState,
+    RouteAuthority, VehicleState, WorldRevision, WorldState,
 };
 use p4_region_scale_scenario::generate_region_scale_world;
 use protocol::EntityVersion;
@@ -15,7 +15,7 @@ use world_ids::{
     BuildingInstanceId, ClientId, CommandId, ContainerId, DoorId, ItemId, OpeningId, PersonId,
     RouteId, SessionId, VehicleId, WallId, WorldId,
 };
-use world_time::{WorldInstant, WorldTick};
+use world_time::WorldInstant;
 
 #[derive(Clone, Debug)]
 pub struct P5Scenario {
@@ -189,7 +189,7 @@ pub fn generate_p5_scenario() -> Result<P5Scenario, ScenarioError> {
         baseline: WorldState {
             world_id: ids.world_id,
             revision: WorldRevision::ZERO,
-            clock: WorldInstant::from_ticks(WorldTick::ZERO),
+            clock: WorldInstant::ZERO,
             players,
             doors,
             items,
@@ -210,7 +210,7 @@ pub struct ScenarioCommandFactory {
     world_id: WorldId,
     command_namespace: u128,
     next_sequence: u64,
-    next_tick: u64,
+    next_tick: i64,
 }
 
 impl ScenarioCommandFactory {
@@ -249,7 +249,7 @@ impl ScenarioCommandFactory {
             self.command_namespace
                 .wrapping_add(u128::from(sequence).wrapping_add(1)),
         );
-        let issued_at = WorldInstant::from_ticks(WorldTick::from(self.next_tick));
+        let issued_at = WorldInstant::from_ticks(self.next_tick);
         self.next_tick += 1;
         AuthorityCommandEnvelope {
             command_id,

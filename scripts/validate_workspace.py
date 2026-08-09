@@ -38,6 +38,11 @@ def main() -> int:
         "crates/p4_integrated_scenario",
         "crates/region_scale_core",
         "crates/p4_region_scale_scenario",
+        "crates/authoritative_world_core",
+        "crates/authority_persistence",
+        "crates/authority_transport",
+        "crates/p5_authority_scenario",
+        "crates/p5_validation_harness",
         "apps/camera_trace",
         "apps/camera_routes",
         "apps/p2_reference_frame_trace",
@@ -50,6 +55,8 @@ def main() -> int:
         "apps/integrated_world_visual",
         "apps/p4_region_scale_trace",
         "apps/p4_region_scale_visual",
+        "apps/p5_authority_trace",
+        "apps/p5_manual_validation",
     }
     assert required <= members, required - members
 
@@ -70,10 +77,13 @@ def main() -> int:
         ROOT / "docs/evidence/p4-region-scale-manual-gpu-validation-2026-08-09.md"
     ).is_file()
 
-    assert stages["P5"]["status"] == "not-started"
+    assert stages["P5"]["status"] in {
+        "implementation-in-progress",
+        "automated-gate-passed-awaiting-manual-validation",
+    }
     assert stages["P5"]["passed"] is False
-    assert stages["P5"]["ready_to_start"] is True
-    assert stages["P5"]["blocked_by"] == []
+    assert stages["P5"]["issue"] == 24
+    assert stages["P5"]["pull_request"] == 25
     assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(6, 9))
 
     print("Workspace manifest and prototype status passed.")

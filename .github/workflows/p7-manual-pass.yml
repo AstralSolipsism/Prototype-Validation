@@ -1,0 +1,47 @@
+name: p7-manual-pass
+
+on:
+  push:
+    branches:
+      - agent/p7-interest-region-authority
+    paths:
+      - '.github/workflows/p7-manual-pass.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/p7-interest-region-authority
+          fetch-depth: 0
+
+      - name: Record project-owner P7 manual validation
+        run: |
+          python scripts/finalize_p7.py \
+            --mode passed \
+            --workflow-run 31311262357 \
+            --source e3372efc8fa400db92e94dc02c92a1f481d0d68a \
+            --manual-artifact-id 9037481094 \
+            --manual-artifact-sha 78c806f1613506488725caecfbce32cef3dbef3fb1d5cbd713ccd9c7c7cd36b3 \
+            --evidence-artifact-id 9037467989 \
+            --evidence-artifact-sha 83a2e7c4e0e69b048b6a1ab827df2ce950db1f935793c43373f510227dab4504 \
+            --report-sha eb61e77d495ec426ba9f555ac172f63c2effe1a7bd8672c498bfaf01f87cd2e3 \
+            --interests-sha 79d5901f4033851793f107a117e4bf5677e36998b6a3798af2bcf18b5bae3d00 \
+            --transfer-sha 27784446fd389d6c7db0c7e33c6be96ef55bb98f2b3471f25189723b3e22cff6
+          python scripts/validate_workspace.py
+
+      - name: Commit finalized stage state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add prototype-status.json
+          if git diff --cached --quiet; then
+            echo "P7 status was already finalized."
+          else
+            git commit -m "Mark P7 passed after project-owner validation"
+            git push origin HEAD:agent/p7-interest-region-authority
+          fi

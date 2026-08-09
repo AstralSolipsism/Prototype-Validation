@@ -206,32 +206,80 @@
     {
       "id": "P6",
       "name": "simulation-tiers-event-calendar-and-million-person-scale",
-      "status": "implementation-in-progress",
-      "passed": false,
+      "status": "passed",
+      "passed": true,
       "issue": 26,
+      "pull_request": 27,
       "ready_to_start": false,
       "blocked_by": [],
       "evidence_present": [
-        "P6 acceptance specification in Issue #26",
-        "planned compact Cold population structure-of-arrays layout",
-        "planned Warm event calendar and Hot fixed-step runtime",
-        "planned Cold/Warm/Hot round-trip continuity validation"
+        "compact structure-of-arrays Cold population with 1,000,000 stable identities",
+        "event-calendar Warm population with 10,000 people",
+        "fixed-step Hot population with 300 people",
+        "zero full-population scans during Cold and Warm advancement",
+        "30-day accelerated simulation",
+        "64-person Cold/Warm/Hot round-trip continuity",
+        "disposable and rebuildable Hot runtime cache",
+        "sparse significant history instead of micro-update persistence",
+        "two independent deterministic runs with identical fingerprints",
+        "complete P0 through P5 regression gate",
+        "Linux and Windows x64 automatic P6 validation passed",
+        "Windows x64 manual validation package generated",
+        "project owner Windows x64 interactive validation artifacts submitted",
+        "manual report with 12 of 12 checks passed",
+        "manual tier-transition file exactly matches both report runs",
+        "manual result recorded in docs/evidence/p6-simulation-scale-manual-validation-2026-08-09.md"
       ],
-      "evidence_missing": [
-        "green complete-workspace P6 automated gate",
-        "actual one-million Cold population scale report",
-        "Windows x64 P6 manual validation package",
-        "project owner manual acceptance"
+      "evidence_missing": [],
+      "known_non_blocking_evidence_gaps": [
+        "p6-machine-info.txt was not submitted, so the project-owner hardware profile is not archived"
       ],
-      "pull_request": 27
+      "automated_gate": {
+        "workflow_run": 31305508078,
+        "validated_source": "eca2cc8de2710d1190efad447f8ef3a7db8bc85a",
+        "result": "passed",
+        "manual_artifact": "p6-simulation-scale-manual-validation-windows-x64",
+        "manual_artifact_id": 9035885890,
+        "manual_artifact_sha256": "ae683e1d1ab06fab07b2906a99e0ecc1ccbcd23725248f27c391d175c86c4169",
+        "evidence_artifact": "p6-simulation-scale-automated-evidence",
+        "evidence_artifact_id": 9035870286,
+        "evidence_artifact_sha256": "9f98a75344ae431e9bc4c8ae63544267a903f126207cbb420728e232e734f03d"
+      },
+      "manual_validation": {
+        "date": "2026-08-09",
+        "result": "passed",
+        "evidence_file": "docs/evidence/p6-simulation-scale-manual-validation-2026-08-09.md",
+        "report_sha256": "aa755caad153a73498b4bc2fba1e950aad41d98f19d93199e81003b3100e8767",
+        "transition_sha256": "f19b57dce00bfc427f3539ef9cad69b39138d87375ffcd3b667d38ab65953585",
+        "checks_passed": 12,
+        "checks_total": 12,
+        "cold_population": 1000000,
+        "warm_population": 10000,
+        "hot_population": 300,
+        "model_owned_bytes": 56105856,
+        "cold_due_events": 30000000,
+        "warm_due_events": 800162,
+        "hot_fixed_step_updates": 360000,
+        "cold_full_population_scans": 0,
+        "warm_full_population_scans": 0,
+        "history_events": 228,
+        "transition_people": 64,
+        "facts_preserved": true,
+        "hot_cache_entries_cleared": 300,
+        "hot_cache_entries_rebuilt": 300,
+        "first_run_ms": 1529,
+        "repeat_run_ms": 1479,
+        "fingerprint": "1cde2c215bbb4b38ca89b8eadf1bd668",
+        "repeat_fingerprint": "1cde2c215bbb4b38ca89b8eadf1bd668"
+      },
+      "final_verdict": "The Cold/Warm/Hot simulation-tier architecture, due-index and event-calendar scheduling, million-person persistent population, tier round-trip continuity, disposable Hot caches, sparse history and deterministic repeat execution passed automated and project-owner manual validation."
     },
     {
       "id": "P7",
       "status": "not-started",
       "passed": false,
-      "blocked_by": [
-        "P6 manual validation"
-      ]
+      "ready_to_start": true,
+      "blocked_by": []
     },
     {
       "id": "P8",

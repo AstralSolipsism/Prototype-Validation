@@ -30,7 +30,7 @@ jobs:
           echo 'e0c968d839f586b20e754b4c8c8ca00e05a43128b35b4c7df09fb2aada8e99f0  /tmp/p7-overlay.tar.gz' | sha256sum --check -
           tar -tzf /tmp/p7-overlay.tar.gz
 
-      - name: Materialize P7 source overlay
+      - name: Materialize non-workflow P7 source
         shell: bash
         run: |
           tar -xzf /tmp/p7-overlay.tar.gz
@@ -38,11 +38,10 @@ jobs:
           test -f crates/p7_validation_harness/src/lib.rs
           test -f apps/p7_manual_validation/src/main.rs
           test -f .github/workflows/p7-pr-validation.yml
+          rm -f .github/workflows/p7-pr-validation.yml
           rm -rf .p7-bootstrap
-          rm -f .github/workflows/p7-bootstrap-source.yml
-          rm -f .github/workflows/p7-bootstrap-pr.yml
 
-      - name: Commit P7 source
+      - name: Commit ordinary P7 source
         shell: bash
         run: |
           git config user.name "github-actions[bot]"

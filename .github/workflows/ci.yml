@@ -1,4 +1,4 @@
-name: p4-integrated-final-gate
+name: p4-region-scale-corrected-final-gate
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: p4-integrated-final-gate
+  group: p4-region-scale-corrected-final-gate
   cancel-in-progress: true
 
 env:
@@ -20,7 +20,7 @@ env:
 
 jobs:
   validate:
-    name: architecture, Rust, deterministic evidence and Bevy build
+    name: architecture, region scale, grounding, route surfaces and Bevy build
     runs-on: ubuntu-latest
     timeout-minutes: 90
     outputs:
@@ -28,7 +28,7 @@ jobs:
       gate_status: ${{ steps.gate.outputs.status }}
 
     steps:
-      - name: Checkout integrated branch with history
+      - name: Checkout corrected P4 branch with history
         uses: actions/checkout@v4
         with:
           ref: ${{ env.INTEGRATED_BRANCH }}
@@ -40,7 +40,7 @@ jobs:
           set -euo pipefail
           mkdir -p docs/evidence
           {
-            echo '# P4 integrated final automated gate'
+            echo '# P4 corrected region-scale final automated gate'
             echo
             echo 'Result: **IN_PROGRESS**'
             echo
@@ -52,7 +52,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/evidence/p4-integrated-final-gate.md
           if ! git diff --cached --quiet; then
-            git commit -m "Record integrated P4 final gate start"
+            git commit -m "Record corrected P4 final gate start"
             git push origin "HEAD:${INTEGRATED_BRANCH}"
           fi
 
@@ -93,7 +93,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if ! git diff --cached --quiet; then
-            git commit -m "Finalize integrated P4 automated gate fixes"
+            git commit -m "Finalize corrected P4 automated gate fixes"
             git push origin "HEAD:${INTEGRATED_BRANCH}"
           fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -123,6 +123,7 @@ jobs:
               --exclude building_visual \
               --exclude world_visual \
               --exclude integrated_world_visual \
+              --exclude p4_region_scale_visual \
               --all-targets --locked
             echo '## P1 headless evidence'
             cargo run --locked -p camera_trace -- artifacts/p1-camera-trace.json
@@ -132,16 +133,20 @@ jobs:
             cargo run --locked -p p3_building_trace -- artifacts/p3-building-trace.json
             echo '## P4A headless evidence'
             cargo run --locked -p p4_world_trace -- artifacts/p4-world-trace.json
-            echo '## Integrated P4 headless evidence'
+            echo '## Previous integrated P4 regression evidence'
             cargo run --locked -p p4_integrated_trace -- artifacts/p4-integrated-world-trace.json
-            echo '## Integrated Bevy Linux build'
+            echo '## Corrected region-scale P4 evidence'
+            cargo run --locked -p p4_region_scale_trace -- artifacts/p4-region-scale-trace.json
+            echo '## Previous integrated Bevy regression build'
             cargo build --locked -p integrated_world_visual
+            echo '## Corrected region-scale Bevy Linux build'
+            cargo build --locked -p p4_region_scale_visual
           ) 2>&1 | tee artifacts/p4-integrated-final-gate.log
           status=${PIPESTATUS[0]}
           echo "status=${status}" >> "$GITHUB_OUTPUT"
           if [ "$status" -eq 0 ]; then result=PASS; else result=FAIL; fi
           {
-            echo '# P4 integrated final automated gate'
+            echo '# P4 corrected region-scale final automated gate'
             echo
             echo "Result: **${result}**"
             echo
@@ -154,13 +159,17 @@ jobs:
               echo
               echo '- static architecture and prototype-state checks'
               echo '- formatting and committed dependency lockfile'
-              echo '- complete workspace compilation including Bevy applications'
-              echo '- complete workspace strict Clippy'
+              echo '- complete workspace compilation and strict Clippy'
               echo '- engine-independent unit and integration tests'
-              echo '- P1, P2, P3, P4A and integrated P4 deterministic traces'
-              echo '- integrated Bevy visual application Linux build'
+              echo '- P0 through P4A regression traces'
+              echo '- corrected 4 km AtlasCell and 250 m TerrainTile separation'
+              echo '- selected-cell full materialization plus neighbor proxies'
+              echo '- deterministic shared boundary contracts'
+              echo '- explicit building grounding and foundations'
+              echo '- surface-conforming route and bridge semantics'
+              echo '- previous and corrected Bevy Linux builds'
               echo
-              echo 'The Windows x64 package job may now run from the same workflow.'
+              echo 'The corrected Windows x64 package job may now run.'
             else
               echo '## Failure summary'
               echo
@@ -172,7 +181,7 @@ jobs:
               echo '## Diagnostic tail'
               echo
               echo '```text'
-              tail -n 240 artifacts/p4-integrated-final-gate.log
+              tail -n 260 artifacts/p4-integrated-final-gate.log
               echo '```'
             fi
           } > docs/evidence/p4-integrated-final-gate.md
@@ -182,13 +191,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: p4-integrated-automated-evidence
+          name: p4-region-scale-automated-evidence
           path: |
             artifacts/p1-camera-trace.json
             artifacts/p2-reference-frame-trace.json
             artifacts/p3-building-trace.json
             artifacts/p4-world-trace.json
             artifacts/p4-integrated-world-trace.json
+            artifacts/p4-region-scale-trace.json
             artifacts/p4-integrated-final-gate.log
             docs/evidence/p4-integrated-final-gate.md
           if-no-files-found: warn
@@ -203,7 +213,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/evidence/p4-integrated-final-gate.md
           if ! git diff --cached --quiet; then
-            git commit -m "Record integrated P4 final gate result"
+            git commit -m "Record corrected P4 final gate result"
             git push origin "HEAD:${INTEGRATED_BRANCH}"
           fi
 
@@ -212,14 +222,14 @@ jobs:
         run: exit 1
 
   package:
-    name: Windows x64 final manual acceptance package
+    name: Windows x64 corrected region-scale manual acceptance package
     needs: validate
     if: needs.validate.outputs.gate_status == '0'
     runs-on: windows-latest
     timeout-minutes: 90
 
     steps:
-      - name: Checkout validated integrated branch
+      - name: Checkout validated corrected P4 branch
         uses: actions/checkout@v4
         with:
           ref: ${{ env.INTEGRATED_BRANCH }}
@@ -232,67 +242,71 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
 
-      - name: Download automated evidence
+      - name: Download corrected automated evidence
         uses: actions/download-artifact@v4
         with:
-          name: p4-integrated-automated-evidence
+          name: p4-region-scale-automated-evidence
           path: evidence
 
-      - name: Build integrated Windows visual application
-        run: cargo build --locked -p integrated_world_visual
+      - name: Build corrected Windows visual application
+        run: cargo build --locked -p p4_region_scale_visual
 
-      - name: Assemble final manual acceptance package
+      - name: Assemble corrected manual acceptance package
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item target/debug/integrated_world_visual.exe dist/integrated_world_visual.exe
-          Copy-Item docs/visual-acceptance/p4-integrated-checklist.md dist/p4-integrated-checklist.md
-          Copy-Item scripts/collect_p4_integrated_machine_info.ps1 dist/collect_p4_integrated_machine_info.ps1
-          $trace = Get-ChildItem evidence -Recurse -Filter p4-integrated-world-trace.json | Select-Object -First 1
-          if ($null -eq $trace) { throw 'Integrated P4 trace was not found in downloaded evidence.' }
-          Copy-Item $trace.FullName dist/p4-integrated-world-trace.json
+          Copy-Item target/debug/p4_region_scale_visual.exe dist/p4_region_scale_visual.exe
+          Copy-Item docs/visual-acceptance/p4-region-scale-checklist.md dist/p4-region-scale-checklist.md
+          Copy-Item scripts/collect_p4_region_scale_machine_info.ps1 dist/collect_p4_region_scale_machine_info.ps1
+          $trace = Get-ChildItem evidence -Recurse -Filter p4-region-scale-trace.json | Select-Object -First 1
+          if ($null -eq $trace) { throw 'Corrected P4 trace was not found in downloaded evidence.' }
+          Copy-Item $trace.FullName dist/p4-region-scale-trace.json
           @"
-          # P4 Atlas 到卷轴世界综合人工验收包
+          # P4 地区级物化修正版人工验收包
 
-          本包用于 P4 最终端到端技术验收，不代表正式美术、内容规模或最终性能。
+          本包专门复验此前失败的三个阻塞项：
+
+          - AtlasCell 与局部实景的地区级尺度；
+          - 建筑地形落位和基础；
+          - 路线贴地、桥梁和垂向穿模门禁。
 
           Validated source: ${{ needs.validate.outputs.source_sha }}
           Workflow run: $env:GITHUB_RUN_ID
 
           ## 运行
 
-          1. 解压整个压缩包，不要直接在 ZIP 内运行。
-          2. 在解压目录打开 PowerShell。
+          1. 完整解压本包，不要直接在 ZIP 中运行。
+          2. 在目录中打开 PowerShell。
           3. 执行：
 
-             powershell -ExecutionPolicy Bypass -File .\collect_p4_integrated_machine_info.ps1
-             .\integrated_world_visual.exe
+             powershell -ExecutionPolicy Bypass -File .\collect_p4_region_scale_machine_info.ps1
+             .\p4_region_scale_visual.exe
 
-          4. 按 p4-integrated-checklist.md 完成完整连续验收。
+          4. 按 p4-region-scale-checklist.md 完成完整验收。
 
           ## 操作
 
-          - M：Atlas / 局部世界切换
-          - Tab：切换 Atlas 图层
-          - Q / E：选择地块
-          - Enter：进入已物化地块
-          - 1 / 2 / 3：选择路线并开始卷轴旅行
+          - M：Atlas / 当前地区局部总览
+          - Tab：Atlas 图层
+          - Q / E：选择地区
+          - Enter：激活所选地区
+          - 1 / 2 / 3：跨地区路线
           - Space：暂停 / 继续
           - V：切换观察侧
-          - L：建筑完整结构 / 外壳 / Massing
-          - B：历史图层
-          - C：等高线
-          - H：Atlas 边界
+          - L：建筑 LOD
+          - N：邻区代理
+          - G：建筑基础
+          - H：当前地区边界
           - T：路线显示
-          - A / D 或左右键：局部总览环绕
-          - 上下键：调整总览高度
+          - A / D 或左右键：局部环绕
+          - 上下键：局部总览高度
           - R：重置
           "@ | Set-Content -Encoding UTF8 dist/RUN.md
 
-      - name: Upload final Windows package
+      - name: Upload corrected Windows package
         uses: actions/upload-artifact@v4
         with:
-          name: p4-integrated-atlas-to-scroll-windows-x64
+          name: p4-region-scale-materialization-windows-x64
           path: dist
           if-no-files-found: error
           retention-days: 30

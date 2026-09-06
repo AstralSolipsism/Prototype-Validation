@@ -34,6 +34,10 @@ def main() -> int:
         "crates/p3_building_scenario",
         "crates/world_generation_core",
         "crates/p4_world_scenario",
+        "crates/integrated_world_core",
+        "crates/p4_integrated_scenario",
+        "crates/region_scale_core",
+        "crates/p4_region_scale_scenario",
         "apps/camera_trace",
         "apps/camera_routes",
         "apps/p2_reference_frame_trace",
@@ -42,6 +46,10 @@ def main() -> int:
         "apps/building_visual",
         "apps/p4_world_trace",
         "apps/world_visual",
+        "apps/p4_integrated_trace",
+        "apps/integrated_world_visual",
+        "apps/p4_region_scale_trace",
+        "apps/p4_region_scale_visual",
     }
     assert required <= members, required - members
 
@@ -55,9 +63,18 @@ def main() -> int:
     assert stages["P2"]["status"] == "passed"
     assert stages["P3"]["passed"] is True
     assert stages["P3"]["status"] == "passed"
-    assert stages["P4"]["passed"] is False
-    assert stages["P4"]["status"] == "implementation-in-progress"
-    assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(5, 9))
+    assert stages["P4"]["passed"] is True
+    assert stages["P4"]["status"] == "passed"
+    assert all(stage["passed"] is True for stage in stages["P4"]["sub_stages"])
+    assert (
+        ROOT / "docs/evidence/p4-region-scale-manual-gpu-validation-2026-08-09.md"
+    ).is_file()
+
+    assert stages["P5"]["status"] == "not-started"
+    assert stages["P5"]["passed"] is False
+    assert stages["P5"]["ready_to_start"] is True
+    assert stages["P5"]["blocked_by"] == []
+    assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(6, 9))
 
     print("Workspace manifest and prototype status passed.")
     return 0

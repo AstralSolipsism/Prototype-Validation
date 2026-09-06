@@ -14,6 +14,10 @@ members = [
     "crates/p3_building_scenario",
     "crates/world_generation_core",
     "crates/p4_world_scenario",
+    "crates/integrated_world_core",
+    "crates/p4_integrated_scenario",
+    "crates/region_scale_core",
+    "crates/p4_region_scale_scenario",
     "apps/camera_trace",
     "apps/camera_routes",
     "apps/p2_reference_frame_trace",
@@ -22,6 +26,10 @@ members = [
     "apps/building_visual",
     "apps/p4_world_trace",
     "apps/world_visual",
+    "apps/p4_integrated_trace",
+    "apps/integrated_world_visual",
+    "apps/p4_region_scale_trace",
+    "apps/p4_region_scale_visual",
 ]
 
 [workspace.package]
@@ -34,7 +42,7 @@ publish = false
 bevy = { version = "=0.19.0", default-features = false, features = ["3d"] }
 glam = { version = "0.32.0", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde_json = { version = "1.0", features = ["float_roundtrip"] }
 thiserror = "2.0"
 
 [profile.dev]

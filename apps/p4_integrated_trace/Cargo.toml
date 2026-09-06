@@ -1,0 +1,12 @@
+[package]
+name = "p4_integrated_trace"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+integrated_world_core = { path = "../../crates/integrated_world_core" }
+p4_integrated_scenario = { path = "../../crates/p4_integrated_scenario" }
+serde.workspace = true
+serde_json.workspace = true

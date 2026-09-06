@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-08-08",
+  "updated_at": "2026-08-09",
   "repository_role": "technical-preproduction",
   "stages": [
     {
@@ -50,12 +50,6 @@
         "frame-transfer validation",
         "manual GPU validation",
         "manual result recorded in docs/evidence/p2-manual-gpu-validation-2026-08-08.md"
-      ],
-      "known_non_blocking_issues": [
-        "Issue #6 production occlusion fade and cutaway",
-        "formal vehicle physics and hydrodynamics",
-        "network replication and region authority",
-        "player vehicle construction"
       ]
     },
     {
@@ -70,25 +64,17 @@
         "room, portal, collision, navigation, chunk, cutaway and massing compilation",
         "incremental dirty-set planning",
         "deterministic two-storey building scenario",
-        "successful P3 headless building report in CI run 31244924099",
-        "Bevy static and moving building visual prototype",
-        "successful Windows package run 31245427276",
-        "manual GPU validation",
-        "manual result recorded in docs/evidence/p3-manual-gpu-validation-2026-08-08.md"
-      ],
-      "known_non_blocking_issues": [
-        "formal player construction UI and transaction model",
-        "complex roof solver",
-        "structural mechanics",
-        "production architecture asset kits",
-        "visual regression recordings and screenshots"
+        "successful P3 headless building report",
+        "manual GPU validation"
       ]
     },
     {
       "id": "P4",
-      "name": "layered-deterministic-world-generation",
-      "status": "implementation-in-progress",
-      "passed": false,
+      "name": "integrated-atlas-to-scroll-world-generation",
+      "status": "passed",
+      "passed": true,
+      "issue": 11,
+      "pull_request": 18,
       "sub_stages": [
         {
           "id": "P4A",
@@ -99,70 +85,89 @@
           "pull_request": 12
         },
         {
-          "id": "P4B",
-          "name": "atlas-semantic-world-map-and-layer-boundary",
-          "status": "not-started",
-          "passed": false,
+          "id": "WP-B",
+          "name": "atlas-semantic-world-map",
+          "status": "passed",
+          "passed": true,
           "issue": 13
         },
         {
-          "id": "P4C",
+          "id": "WP-C",
           "name": "high-resolution-cell-geography-materialization",
-          "status": "not-started",
-          "passed": false,
+          "status": "passed",
+          "passed": true,
           "issue": 14
         },
         {
-          "id": "P4D",
-          "name": "geography-driven-human-history-and-settlement-morphology",
-          "status": "not-started",
-          "passed": false,
+          "id": "WP-D",
+          "name": "geography-driven-human-history-and-land-use",
+          "status": "passed",
+          "passed": true,
           "issue": 15
         },
         {
-          "id": "P4E",
-          "name": "world-derived-traversal-scroll-routes-and-camera-corridors",
-          "status": "not-started",
-          "passed": false,
+          "id": "WP-E",
+          "name": "world-derived-traversal-and-scroll-view",
+          "status": "passed",
+          "passed": true,
           "issue": 16
         },
         {
-          "id": "P4F",
-          "name": "cross-scale-atlas-cell-scene-route-consistency",
-          "status": "not-started",
-          "passed": false,
+          "id": "WP-F",
+          "name": "cross-scale-consistency",
+          "status": "passed",
+          "passed": true,
           "issue": 17
         }
       ],
       "evidence_present": [
-        "P4 umbrella acceptance specification in Issue #11",
-        "P4A deterministic hex topology and shared boundary contracts",
-        "P4A versioned macro world manifest",
-        "P4A terrain, climate, hydrology, transport, settlement and route skeleton",
-        "P4A world constraint validators",
-        "P4A radius-two 19-cell world scenario",
-        "P4A traversal-order invariant headless trace",
-        "P4A continuous Bevy 3D projection",
-        "P4A Windows GPU validation package run 31251764378",
-        "P4A manual validation of continuity, unified identity and reachability"
+        "P4A macro atlas skeleton, stable identities and shared boundaries",
+        "independent Atlas semantic map and regional materialization model",
+        "4 km AtlasCell separated from 250 m TerrainTile units",
+        "selected-cell 97x97 full materialization plus up to six 17x17 neighbor proxies",
+        "independent materialization IDs and deterministic cache rebuild",
+        "shared-boundary height error below 2e-12 m",
+        "geography-driven history, land use and settlement layout",
+        "explicit building grounding with slab or terraced foundations",
+        "surface-conforming route points with explicit bridge structures",
+        "surface vertical error below 3e-14 m",
+        "three routes each crossing three AtlasCells",
+        "complete workspace compilation, strict Clippy and tests",
+        "corrected Linux and Windows Bevy builds",
+        "workflow run 31290787156 and artifact 9031331900",
+        "successful final manual GPU validation",
+        "manual result recorded in docs/evidence/p4-region-scale-manual-gpu-validation-2026-08-09.md"
       ],
-      "evidence_missing": [
-        "P4B independent Atlas semantic map with contours and thematic layers",
-        "P4C high-resolution intra-cell terrain and boundary-constrained materialization",
-        "P4D causal human history, settlement morphology and land-use generation",
-        "P4E traversal graph and scroll routes derived from detailed world facts",
-        "P4F cross-scale identity and round-trip consistency validation"
+      "resolved_blocking_issues": [
+        "Issue #21 AtlasCell versus TerrainTile scale and materialization boundary",
+        "Issue #22 building terrain grounding and foundation contract",
+        "Issue #23 route surface conformance and bridge semantics"
       ],
-      "known_scope_correction": "The P4A visual is a low-sample continuous 3D projection, not the intended layered Atlas-to-cell-to-scene-to-scroll generation architecture."
+      "final_verdict": "The integrated Atlas, regional materialization, geography, history, building grounding, route surface semantics, cross-cell travel and cross-scale identity chain passed automated and manual validation."
     },
     {
       "id": "P5",
+      "name": "authoritative-server-persistence-recovery-and-replay",
       "status": "not-started",
       "passed": false,
-      "blocked_by": ["P4B", "P4C", "P4D", "P4E", "P4F"]
+      "issue": 24,
+      "ready_to_start": true,
+      "blocked_by": []
     },
-    {"id":"P6","status":"not-started","passed":false},
-    {"id":"P7","status":"not-started","passed":false},
-    {"id":"P8","status":"not-started","passed":false}
+    {
+      "id": "P6",
+      "status": "not-started",
+      "passed": false
+    },
+    {
+      "id": "P7",
+      "status": "not-started",
+      "passed": false
+    },
+    {
+      "id": "P8",
+      "status": "not-started",
+      "passed": false
+    }
   ]
 }

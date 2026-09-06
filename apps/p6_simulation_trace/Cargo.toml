@@ -1,0 +1,10 @@
+[package]
+name = "p6_simulation_trace"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+p6_validation_harness = { path = "../../crates/p6_validation_harness" }
+serde_json.workspace = true

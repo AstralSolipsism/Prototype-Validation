@@ -43,6 +43,8 @@ def main() -> int:
         "crates/authority_transport",
         "crates/p5_authority_scenario",
         "crates/p5_validation_harness",
+        "crates/simulation_scale_core",
+        "crates/p6_validation_harness",
         "apps/camera_trace",
         "apps/camera_routes",
         "apps/p2_reference_frame_trace",
@@ -57,6 +59,8 @@ def main() -> int:
         "apps/p4_region_scale_visual",
         "apps/p5_authority_trace",
         "apps/p5_manual_validation",
+        "apps/p6_simulation_trace",
+        "apps/p6_manual_validation",
     }
     assert required <= members, required - members
 
@@ -76,28 +80,31 @@ def main() -> int:
     assert (
         ROOT / "docs/evidence/p4-region-scale-manual-gpu-validation-2026-08-09.md"
     ).is_file()
+    assert stages["P5"]["passed"] is True
+    assert stages["P5"]["status"] == "passed"
+    assert (
+        ROOT / "docs/evidence/p5-authority-manual-validation-2026-08-09.md"
+    ).is_file()
 
-    p5 = stages["P5"]
-    assert p5["status"] in {
-        "implementation-in-progress",
-        "automated-gate-passed-awaiting-manual-validation",
-        "passed",
-    }
-    assert p5["issue"] == 24
-    assert p5["pull_request"] == 25
+    assert stages["P6"]["passed"] is True
+    assert stages["P6"]["status"] == "passed"
+    assert stages["P6"]["issue"] == 26
+    assert stages["P6"]["pull_request"] == 27
+    assert (
+        ROOT / "docs/evidence/p6-simulation-scale-manual-validation-2026-08-09.md"
+    ).is_file()
+    assert stages["P6"]["manual_validation"]["checks_passed"] == 12
+    assert stages["P6"]["manual_validation"]["checks_total"] == 12
+    assert (
+        stages["P6"]["manual_validation"]["fingerprint"]
+        == stages["P6"]["manual_validation"]["repeat_fingerprint"]
+    )
 
-    if p5["status"] == "passed":
-        assert p5["passed"] is True
-        assert p5.get("evidence_missing") == []
-        assert (
-            ROOT / "docs/evidence/p5-authority-manual-validation-2026-08-09.md"
-        ).is_file()
-        assert stages["P6"].get("ready_to_start") is True
-        assert stages["P6"].get("blocked_by") == []
-    else:
-        assert p5["passed"] is False
-
-    assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(6, 9))
+    assert stages["P7"]["status"] == "not-started"
+    assert stages["P7"]["passed"] is False
+    assert stages["P7"]["ready_to_start"] is True
+    assert stages["P7"]["blocked_by"] == []
+    assert stages["P8"]["status"] == "not-started"
 
     print("Workspace manifest and prototype status passed.")
     return 0

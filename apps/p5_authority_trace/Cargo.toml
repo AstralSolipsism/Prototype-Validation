@@ -1,0 +1,10 @@
+[package]
+name = "p5_authority_trace"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+p5_validation_harness = { path = "../../crates/p5_validation_harness" }
+serde_json.workspace = true

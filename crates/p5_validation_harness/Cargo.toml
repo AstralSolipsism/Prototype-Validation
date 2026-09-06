@@ -1,0 +1,19 @@
+[package]
+name = "p5_validation_harness"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+authoritative_world_core = { path = "../authoritative_world_core" }
+authority_persistence = { path = "../authority_persistence" }
+authority_transport = { path = "../authority_transport" }
+p5_authority_scenario = { path = "../p5_authority_scenario" }
+protocol = { path = "../protocol" }
+replay_core = { path = "../replay_core" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+world_generation_core = { path = "../world_generation_core" }
+world_ids = { path = "../world_ids" }

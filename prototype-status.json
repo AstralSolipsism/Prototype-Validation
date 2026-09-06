@@ -148,16 +148,67 @@
     {
       "id": "P5",
       "name": "authoritative-server-persistence-recovery-and-replay",
-      "status": "not-started",
-      "passed": false,
+      "status": "passed",
+      "passed": true,
       "issue": 24,
-      "ready_to_start": true,
-      "blocked_by": []
+      "pull_request": 25,
+      "ready_to_start": false,
+      "blocked_by": [],
+      "evidence_present": [
+        "engine-independent authoritative world state and typed command model",
+        "persistent idempotency ledger and versioned domain events",
+        "structured world and entity version conflict rejection",
+        "atomic region snapshot and transactional append-only journal",
+        "ordered ingress for duplicate, delayed and out-of-order commands",
+        "real loopback TCP authority server and two independent client projections",
+        "disconnect and reconnect without authoritative state loss",
+        "snapshot plus post-snapshot journal process recovery",
+        "pre-crash and recovered semantic state fingerprints are identical",
+        "client visual cache deletion and reconstruction from authority snapshots",
+        "complete P0 through P4 regression gate",
+        "Linux and Windows x64 automatic P5 validation passed",
+        "Windows x64 manual validation package generated",
+        "project owner Windows x64 interactive manual validation",
+        "manual report with 14 of 14 checks passed",
+        "submitted snapshot, journal and report cross-consistency audit",
+        "manual result recorded in docs/evidence/p5-authority-manual-validation-2026-08-09.md"
+      ],
+      "evidence_missing": [],
+      "automated_gate": {
+        "workflow_run": 31301005730,
+        "validated_source": "5a37ac6a3928601a2a87dfa556eb8ed9fc5fb674",
+        "result": "passed",
+        "manual_artifact": "p5-authority-manual-validation-windows-x64",
+        "manual_artifact_id": 9034536316,
+        "manual_artifact_sha256": "66521d5eb06b66e0e18217c26d2c21cb5d8b84ec9178c6647db2f24e4d177388",
+        "evidence_artifact": "p5-authority-automated-evidence",
+        "evidence_artifact_id": 9034504809
+      },
+      "manual_validation": {
+        "date": "2026-08-09",
+        "result": "passed",
+        "evidence_file": "docs/evidence/p5-authority-manual-validation-2026-08-09.md",
+        "report_sha256": "ce5aba2822c8ab43ec3d497760985ba3f4086f187847397bce5f5b3fcafe2297",
+        "snapshot_sha256": "18e144ee752e94350417f2bd6882177f29dee9020bbd0903aa05cc515fb48ce4",
+        "journal_sha256": "47e67096827e4a348b8fc3cc790dbe7592449ac92062c97c5a651606a125f075",
+        "checks_passed": 14,
+        "checks_total": 14,
+        "final_revision": 6,
+        "journal_records": 18,
+        "duplicate_receipts": 2,
+        "rejected_receipts": 2,
+        "buffered_out_of_order_commands": 1,
+        "pre_crash_fingerprint": "2c0436e8121afd5377673a3de7028807",
+        "recovered_fingerprint": "2c0436e8121afd5377673a3de7028807"
+      },
+      "final_verdict": "The authoritative server, typed command validation, idempotency, ordered ingress, client projection, atomic snapshot, transactional journal, disconnect/reconnect and snapshot-plus-journal process recovery chain passed automated and project-owner manual validation."
     },
     {
       "id": "P6",
       "status": "not-started",
-      "passed": false
+      "passed": false,
+      "ready_to_start": true,
+      "blocked_by": []
     },
     {
       "id": "P7",

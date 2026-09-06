@@ -112,6 +112,13 @@ stable_id!(SettlementId);
 stable_id!(LandmarkId);
 stable_id!(RouteId);
 stable_id!(PortalId);
+stable_id!(ClientId);
+stable_id!(SessionId);
+stable_id!(DoorId);
+stable_id!(ItemId);
+stable_id!(ContainerId);
+stable_id!(SnapshotId);
+stable_id!(LogSegmentId);
 
 #[cfg(test)]
 mod tests {
@@ -154,6 +161,16 @@ mod tests {
         assert_eq!(settlement.to_string().len(), 32);
         assert_eq!(route.to_string().len(), 32);
         assert_eq!(portal.to_string().len(), 32);
+    }
+
+    #[test]
+    fn persistence_and_session_ids_share_the_same_wire_contract() {
+        let client = ClientId::from_u128(200);
+        let snapshot = SnapshotId::from_u128(201);
+        let item = ItemId::from_u128(202);
+        assert_eq!(client.to_string().len(), 32);
+        assert_eq!(snapshot.to_string().len(), 32);
+        assert_eq!(item.to_string().len(), 32);
     }
 
     #[test]

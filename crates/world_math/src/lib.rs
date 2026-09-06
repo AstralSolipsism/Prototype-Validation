@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-use glam::{DQuat, DVec3, Vec3};
+use glam::{DMat3, DQuat, DVec3, Vec3};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, btree_map::Entry};
 use thiserror::Error;
@@ -30,6 +30,26 @@ impl RigidTransform {
             translation,
             rotation,
         })
+    }
+
+    pub fn look_at(translation: DVec3, target: DVec3, up: DVec3) -> Result<Self, TransformError> {
+        if !translation.is_finite() || !target.is_finite() || !up.is_finite() {
+            return Err(TransformError::NonFinite);
+        }
+
+        let forward = target - translation;
+        if forward.length_squared() <= 1.0e-18 || up.length_squared() <= 1.0e-18 {
+            return Err(TransformError::DegenerateLookAt);
+        }
+        let forward = forward.normalize();
+        let right = forward.cross(up);
+        if right.length_squared() <= 1.0e-18 {
+            return Err(TransformError::DegenerateLookAt);
+        }
+        let right = right.normalize();
+        let corrected_up = right.cross(forward).normalize();
+        let basis = DMat3::from_cols(right, corrected_up, -forward);
+        Self::new(translation, DQuat::from_mat3(&basis).normalize())
     }
 
     pub fn transform_point(self, point: DVec3) -> DVec3 {
@@ -122,6 +142,23 @@ impl ReferenceFrameGraph {
         }
     }
 
+    pub fn node(&self, id: FrameId) -> Option<ReferenceFrameNode> {
+        self.nodes.get(&id).copied()
+    }
+
+    pub fn set_pose_in_parent(
+        &mut self,
+        id: FrameId,
+        pose_in_parent: RigidTransform,
+    ) -> Result<(), FrameGraphError> {
+        let node = self
+            .nodes
+            .get_mut(&id)
+            .ok_or(FrameGraphError::UnknownFrame(id))?;
+        node.pose_in_parent = pose_in_parent;
+        Ok(())
+    }
+
     pub fn world_transform(&self, id: FrameId) -> Result<RigidTransform, FrameGraphError> {
         let mut chain = Vec::new();
         let mut visited = BTreeSet::new();
@@ -147,6 +184,16 @@ impl ReferenceFrameGraph {
             .rev()
             .fold(RigidTransform::IDENTITY, RigidTransform::compose))
     }
+
+    pub fn transform_between(
+        &self,
+        source: FrameId,
+        target: FrameId,
+    ) -> Result<RigidTransform, FrameGraphError> {
+        let source_world = self.world_transform(source)?;
+        let target_world = self.world_transform(target)?;
+        Ok(source_world.relative_to(target_world))
+    }
 }
 
 #[derive(Clone, Copy, Debug, Error, PartialEq)]
@@ -155,6 +202,8 @@ pub enum TransformError {
     NonFinite,
     #[error("rotation quaternion must be normalized, length was {0}")]
     NonUnitQuaternion(f64),
+    #[error("look-at transform requires distinct position/target and a non-parallel up vector")]
+    DegenerateLookAt,
 }
 
 #[derive(Clone, Copy, Debug, Error, PartialEq, Eq)]
@@ -197,6 +246,14 @@ mod tests {
     }
 
     #[test]
+    fn look_at_uses_negative_local_z_as_forward() {
+        let camera =
+            RigidTransform::look_at(DVec3::ZERO, -DVec3::Z, DVec3::Y).expect("valid camera");
+        assert_near(camera.rotation * -DVec3::Z, -DVec3::Z, 1.0e-12);
+        assert_near(camera.rotation * DVec3::Y, DVec3::Y, 1.0e-12);
+    }
+
+    #[test]
     fn nested_vehicle_frame_resolves_to_world() {
         let world = FrameId::from_u128(1);
         let ship = FrameId::from_u128(2);
@@ -229,6 +286,50 @@ mod tests {
             cabin_world.translation,
             ship_world.transform_point(DVec3::new(5.0, 2.0, 1.0)),
             1.0e-9,
+        );
+    }
+
+    #[test]
+    fn moving_frame_pose_can_be_updated_without_rebuilding_graph() {
+        let world = FrameId::from_u128(1);
+        let ship = FrameId::from_u128(2);
+        let mut graph = ReferenceFrameGraph::default();
+        graph.insert_root(world).expect("world frame");
+        graph
+            .insert_child(ship, world, RigidTransform::IDENTITY)
+            .expect("ship frame");
+
+        let pose = RigidTransform::new(
+            DVec3::new(3_000_000.0, 40.0, -8_000_000.0),
+            DQuat::from_rotation_y(1.2),
+        )
+        .expect("ship pose");
+        graph
+            .set_pose_in_parent(ship, pose)
+            .expect("update ship pose");
+        assert_eq!(graph.world_transform(ship).expect("ship world"), pose);
+        assert_eq!(graph.node(ship).expect("ship node").parent, Some(world));
+    }
+
+    #[test]
+    fn transform_between_frames_maps_source_local_to_target_local() {
+        let world = FrameId::from_u128(1);
+        let ship = FrameId::from_u128(2);
+        let mut graph = ReferenceFrameGraph::default();
+        graph.insert_root(world).expect("world frame");
+        graph
+            .insert_child(
+                ship,
+                world,
+                RigidTransform::new(DVec3::new(100.0, 0.0, 50.0), DQuat::from_rotation_y(0.5))
+                    .expect("ship pose"),
+            )
+            .expect("ship frame");
+
+        let ship_to_world = graph.transform_between(ship, world).expect("mapping");
+        assert_eq!(
+            ship_to_world,
+            graph.world_transform(ship).expect("ship world")
         );
     }
 

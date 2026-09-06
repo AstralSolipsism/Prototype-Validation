@@ -1,0 +1,11 @@
+[package]
+name = "camera_routes"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy.workspace = true
+p1_scenario = { path = "../../crates/p1_scenario" }
+scroll_camera_core = { path = "../../crates/scroll_camera_core" }

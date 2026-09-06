@@ -1,0 +1,8 @@
+/target/
+/artifacts/
+.idea/
+.vscode/
+*.log
+*.profraw
+.DS_Store
+Thumbs.db

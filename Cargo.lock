@@ -3818,6 +3818,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "p4_world_scenario"
+version = "0.1.0"
+dependencies = [
+ "building_core",
+ "p3_building_scenario",
+ "world_generation_core",
+ "world_ids",
+]
+
+[[package]]
+name = "p4_world_trace"
+version = "0.1.0"
+dependencies = [
+ "p4_world_scenario",
+ "scroll_camera_core",
+ "serde",
+ "serde_json",
+ "world_generation_core",
+]
+
+[[package]]
 name = "parking"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5658,6 +5679,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 
 [[package]]
+name = "world_generation_core"
+version = "0.1.0"
+dependencies = [
+ "deterministic_rng",
+ "glam",
+ "scroll_camera_core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "world_ids",
+]
+
+[[package]]
 name = "world_ids"
 version = "0.1.0"
 dependencies = [
@@ -5681,6 +5715,19 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "thiserror 2.0.20",
+]
+
+[[package]]
+name = "world_visual"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "building_core",
+ "glam",
+ "p3_building_scenario",
+ "p4_world_scenario",
+ "scroll_camera_core",
+ "world_generation_core",
 ]
 
 [[package]]

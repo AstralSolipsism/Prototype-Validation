@@ -92,6 +92,7 @@ stable_id!(WorldId);
 stable_id!(EntityId);
 stable_id!(PersonId);
 stable_id!(BuildingId);
+stable_id!(BuildingInstanceId);
 stable_id!(VehicleId);
 stable_id!(CellId);
 stable_id!(RegionId);
@@ -105,6 +106,12 @@ stable_id!(OpeningId);
 stable_id!(StairId);
 stable_id!(RoofRegionId);
 stable_id!(ArchitectureStyleId);
+stable_id!(RiverId);
+stable_id!(RoadId);
+stable_id!(SettlementId);
+stable_id!(LandmarkId);
+stable_id!(RouteId);
+stable_id!(PortalId);
 
 #[cfg(test)]
 mod tests {
@@ -137,6 +144,16 @@ mod tests {
             serde_json::to_string(&room).expect("room"),
             format!("\"{room}\"")
         );
+    }
+
+    #[test]
+    fn world_feature_ids_share_the_same_wire_contract() {
+        let settlement = SettlementId::from_u128(100);
+        let route = RouteId::from_u128(101);
+        let portal = PortalId::from_u128(102);
+        assert_eq!(settlement.to_string().len(), 32);
+        assert_eq!(route.to_string().len(), 32);
+        assert_eq!(portal.to_string().len(), 32);
     }
 
     #[test]

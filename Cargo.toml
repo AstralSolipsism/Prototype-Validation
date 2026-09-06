@@ -12,12 +12,16 @@ members = [
     "crates/mobile_region_core",
     "crates/building_core",
     "crates/p3_building_scenario",
+    "crates/world_generation_core",
+    "crates/p4_world_scenario",
     "apps/camera_trace",
     "apps/camera_routes",
     "apps/p2_reference_frame_trace",
     "apps/mobile_region_visual",
     "apps/p3_building_trace",
     "apps/building_visual",
+    "apps/p4_world_trace",
+    "apps/world_visual",
 ]
 
 [workspace.package]

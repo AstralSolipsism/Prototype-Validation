@@ -10,10 +10,14 @@ members = [
     "crates/scroll_camera_core",
     "crates/p1_scenario",
     "crates/mobile_region_core",
+    "crates/building_core",
+    "crates/p3_building_scenario",
     "apps/camera_trace",
     "apps/camera_routes",
     "apps/p2_reference_frame_trace",
     "apps/mobile_region_visual",
+    "apps/p3_building_trace",
+    "apps/building_visual",
 ]
 
 [workspace.package]

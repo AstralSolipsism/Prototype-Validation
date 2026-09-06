@@ -17,6 +17,8 @@ ENGINE_AGNOSTIC_CRATES = (
     "scroll_camera_core",
     "p1_scenario",
     "mobile_region_core",
+    "building_core",
+    "p3_building_scenario",
 )
 FORBIDDEN_TOKENS = (
     "bevy::",
@@ -53,6 +55,7 @@ def main() -> int:
         ROOT / "docs" / "technical-preproduction.md",
         ROOT / "prototype-status.json",
         ROOT / "test-vectors" / "p0-foundation.json",
+        ROOT / "docs" / "prototypes" / "p3-semantic-building-compiler.md",
     )
     for path in required:
         if not path.exists():

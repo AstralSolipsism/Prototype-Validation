@@ -58,7 +58,33 @@
         "player vehicle construction"
       ]
     },
-    {"id":"P3","status":"not-started","passed":false},
+    {
+      "id": "P3",
+      "name": "semantic-building-compiler",
+      "status": "passed",
+      "passed": true,
+      "evidence_present": [
+        "P3 acceptance specification in Issue #9",
+        "engine-independent building blueprint model",
+        "structured building validation",
+        "room, portal, collision, navigation, chunk, cutaway and massing compilation",
+        "incremental dirty-set planning",
+        "deterministic two-storey building scenario",
+        "successful P3 headless building report in CI run 31244924099",
+        "Bevy static and moving building visual prototype",
+        "full, exterior-shell, massing, cutaway and localized-window modes",
+        "successful Windows package run 31245427276",
+        "manual GPU validation",
+        "manual result recorded in docs/evidence/p3-manual-gpu-validation-2026-08-08.md"
+      ],
+      "known_non_blocking_issues": [
+        "formal player construction UI and transaction model",
+        "complex roof solver",
+        "structural mechanics",
+        "production architecture asset kits",
+        "visual regression recordings and screenshots"
+      ]
+    },
     {"id":"P4","status":"not-started","passed":false},
     {"id":"P5","status":"not-started","passed":false},
     {"id":"P6","status":"not-started","passed":false},

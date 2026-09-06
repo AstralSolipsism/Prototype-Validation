@@ -30,10 +30,14 @@ def main() -> int:
         "crates/scroll_camera_core",
         "crates/p1_scenario",
         "crates/mobile_region_core",
+        "crates/building_core",
+        "crates/p3_building_scenario",
         "apps/camera_trace",
         "apps/camera_routes",
         "apps/p2_reference_frame_trace",
         "apps/mobile_region_visual",
+        "apps/p3_building_trace",
+        "apps/building_visual",
     }
     assert required <= members, required - members
 
@@ -43,9 +47,11 @@ def main() -> int:
     assert stages["P0"]["status"] == "passed"
     assert stages["P1"]["passed"] is True
     assert stages["P1"]["status"] == "passed-with-non-blocking-engineering-followups"
-    assert stages["P2"]["passed"] is False
-    assert stages["P2"]["status"] == "implementation-in-progress"
-    assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(3, 9))
+    assert stages["P2"]["passed"] is True
+    assert stages["P2"]["status"] == "passed"
+    assert stages["P3"]["passed"] is True
+    assert stages["P3"]["status"] == "passed"
+    assert all(stages[f"P{i}"]["status"] == "not-started" for i in range(4, 9))
 
     print("Workspace manifest and prototype status passed.")
     return 0

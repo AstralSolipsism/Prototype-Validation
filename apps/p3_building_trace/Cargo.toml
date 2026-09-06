@@ -1,0 +1,12 @@
+[package]
+name = "p3_building_trace"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+building_core = { path = "../../crates/building_core" }
+p3_building_scenario = { path = "../../crates/p3_building_scenario" }
+serde.workspace = true
+serde_json.workspace = true
